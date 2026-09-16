@@ -1,0 +1,17 @@
+# Local notes — not for publication
+IDEA.md
+
+# Full-resolution originals stay local; images/web/ is what ships
+images/*.png
+images/*.jpg
+images/*.jpeg
+
+# Scratch files from the optimization pass
+optimize_images.py
+_image_map.txt
+
+# OS / editor cruft
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
