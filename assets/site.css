@@ -97,7 +97,14 @@ main { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 24p
 .wide { grid-column: 1 / -1; }
 
 /* ---------- Profile ---------- */
-.profile p { margin-bottom: 10px; }
+/* Justified copy needs hyphenation, otherwise the narrow card column opens up
+   rivers of space between words. html[lang] is set, so auto hyphens work. */
+.profile p {
+  margin-bottom: 10px;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
 .profile strong { color: var(--accent); font-weight: 600; }
 
 /* ---------- Gallery ---------- */
@@ -288,6 +295,13 @@ footer a:hover { color: var(--ink); border-bottom-color: var(--accent-2); }
 
 @media (max-width: 480px) {
   .links-card .link-row { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Justification only where the column is wide enough to justify it. Verified by
+   rendering: at ~378px and wider the gaps stay even, but at ~288px (phone) the
+   lines open into visible rivers ("Homes:  The  streets  and  taverns  of"). */
+@media (max-width: 440px) {
+  .profile p { text-align: left; hyphens: none; }
 }
 
 /* ---------- Footer ---------- */
