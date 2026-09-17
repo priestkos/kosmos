@@ -70,6 +70,74 @@
   tick(); // draw one static frame even if reduced motion is on
 })();
 
+/* ---------- Traits: flaming sparks that follow the cursor ---------- */
+(() => {
+  const traits = Array.from(document.querySelectorAll('.trait'));
+  if (!traits.length) return;
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) return;   // respect the OS preference: no particle motion
+
+  const MIN_GAP_MS = 34;     // throttle, so a fast sweep does not spam particles
+  const MAX_LIVE = 34;       // cap concurrent sparks per trait
+
+  function spawn(trait, x, y) {
+    if (trait.querySelectorAll('.spark').length >= MAX_LIVE) return;
+
+    const s = document.createElement('span');
+    s.className = 'spark';
+
+    const size = 2 + Math.random() * 3;
+    const hue = 18 + Math.random() * 26;            // orange -> amber, matching the sparks bg
+    s.style.width = size + 'px';
+    s.style.height = size + 'px';
+    s.style.left = x + 'px';
+    s.style.top = y + 'px';
+    s.style.background = `hsla(${hue}, 95%, 64%, 0.95)`;
+    s.style.boxShadow = `0 0 ${5 + size * 2}px hsla(${hue}, 95%, 58%, 0.75)`;
+
+    trait.appendChild(s);
+
+    // drift upward with a little lateral wander, like an ember leaving a fire
+    const dx = (Math.random() - 0.5) * 26;
+    const dy = -(30 + Math.random() * 50);
+    const anim = s.animate(
+      [
+        { transform: 'translate(0, 0) scale(1)', opacity: 0.95 },
+        { transform: `translate(${dx * 0.4}px, ${dy * 0.5}px) scale(0.85)`, opacity: 0.55, offset: 0.45 },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.25)`, opacity: 0 }
+      ],
+      { duration: 750 + Math.random() * 650, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' }
+    );
+    anim.onfinish = () => s.remove();
+  }
+
+  traits.forEach(trait => {
+    let last = 0;
+
+    trait.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
+      const now = performance.now();
+      if (now - last < MIN_GAP_MS) return;
+      last = now;
+      const r = trait.getBoundingClientRect();
+      spawn(trait, e.clientX - r.left, e.clientY - r.top);
+    });
+
+    // a small burst on arrival, so the hover reads even without movement
+    trait.addEventListener('pointerenter', e => {
+      if (e.pointerType === 'touch') return;
+      const r = trait.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      for (let i = 0; i < 4; i++) {
+        setTimeout(() => spawn(trait, x + (Math.random() - 0.5) * 18,
+                                      y + (Math.random() - 0.5) * 10), i * 45);
+      }
+    });
+  });
+})();
+
 /* ---------- Lightbox ---------- */
 (() => {
   const lb = document.getElementById('lightbox');

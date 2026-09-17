@@ -304,6 +304,51 @@ footer a:hover { color: var(--ink); border-bottom-color: var(--accent-2); }
   .profile p { text-align: left; hyphens: none; }
 }
 
+/* ---------- Traits ---------- */
+.trait-list {
+  list-style: none;
+  display: grid;
+  gap: 14px;
+  margin-top: 4px;
+}
+.trait {
+  position: relative;
+  overflow: hidden;          /* keeps sparks inside the card */
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(216, 147, 90, 0.05), rgba(183, 101, 74, 0.015));
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s, background 0.25s;
+}
+.trait:hover {
+  border-color: var(--accent-2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(216, 147, 90, 0.12);
+  background: linear-gradient(180deg, rgba(216, 147, 90, 0.09), rgba(183, 101, 74, 0.03));
+}
+.trait-name {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.trait-quote {
+  font-style: italic;
+  color: #d9d0dd;
+  font-size: 0.95rem;
+}
+/* spark particles, positioned by JS */
+.spark {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
 /* ---------- Footer ---------- */
 footer { text-align: center; margin-top: 48px; padding: 20px; color: var(--muted); font-size: 0.85rem; }
 footer span { color: var(--accent-2); }
