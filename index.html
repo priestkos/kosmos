@@ -4,153 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>K'os Mos — Courtesan of Balmung &amp; Tonberry</title>
+<meta name="description" content="K'os Mos — a foxy fiery kitsune. Bard, courtesan and mercenary of Balmung and Tonberry.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #131017;
-    --bg-2: #1b1620;
-    --card: #221b28;
-    --border: #3a2f42;
-    --ink: #ece4e4;
-    --muted: #9c8fa0;
-    --accent: #d8935a;
-    --accent-2: #b7654a;
-    --font-display: "Atkinson Hyperlegible", Georgia, serif;
-    --font-body: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--font-body);
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  /* ---------- Flaming sparks background ---------- */
-  #sparks {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-  }
-  #sparks canvas { display: block; width: 100%; height: 100%; }
-
-  .page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
-
-  /* ---------- Header ---------- */
-  header { text-align: center; padding: 56px 16px 40px; }
-  header h1 {
-    font-family: var(--font-display);
-    font-size: clamp(2.4rem, 6vw, 4rem);
-    letter-spacing: 0.04em;
-    color: var(--ink);
-  }
-  header .title-line {
-    display: flex; align-items: center; justify-content: center; gap: 14px;
-    margin-top: 6px; color: var(--accent); font-style: italic;
-    font-family: var(--font-display); font-size: 1.15rem;
-  }
-  header .title-line::before,
-  header .title-line::after {
-    content: ""; height: 1px; width: 60px; background: var(--accent-2); opacity: 0.6;
-  }
-  header p.servers { margin-top: 12px; color: var(--muted); font-size: 0.95rem; letter-spacing: 0.06em; }
-
-  /* ---------- Layout grid ---------- */
-  main { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 24px; }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 24px 26px;
-  }
-  .card h2 {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    color: var(--accent);
-    margin-bottom: 14px;
-    letter-spacing: 0.03em;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 8px;
-  }
-  .wide { grid-column: 1 / -1; }
-
-  /* ---------- Profile ---------- */
-  .profile p { margin-bottom: 10px; }
-  .profile strong { color: var(--accent); font-weight: 600; }
-
-  /* ---------- Gallery ---------- */
-  .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .shot {
-    display: block;
-    aspect-ratio: 1/1;
-    border-radius: 6px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    cursor: zoom-in;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-  .shot:hover { border-color: var(--accent-2); transform: translateY(-2px); }
-  .shot img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  footer { text-align: center; margin-top: 48px; padding: 20px; color: var(--muted); font-size: 0.85rem; }
-  footer span { color: var(--accent-2); }
-
-  /* ---------- Lightbox ---------- */
-  #lightbox {
-    position: fixed; inset: 0; z-index: 10;
-    background: rgba(10, 8, 12, 0.97);
-    display: none; align-items: center; justify-content: center;
-    padding: 40px 70px;
-  }
-  #lightbox.open { display: flex; }
-  body.lb-open { overflow: hidden; }
-  #lightbox img {
-    max-width: 100%; max-height: 100%;
-    border-radius: 6px; border: 1px solid var(--border);
-    box-shadow: 0 8px 60px rgba(0, 0, 0, 0.7);
-  }
-  .lb-btn {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    background: rgba(34, 27, 40, 0.85);
-    border: 1px solid var(--border); border-radius: 50%;
-    width: 46px; height: 46px;
-    color: var(--ink); font-size: 1.3rem; line-height: 1;
-    cursor: pointer; user-select: none;
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .lb-btn:hover { border-color: var(--accent-2); color: var(--accent); }
-  #lb-prev { left: 14px; }
-  #lb-next { right: 14px; }
-  #lb-close {
-    position: absolute; top: 16px; right: 18px; transform: none;
-    width: 40px; height: 40px; font-size: 1.5rem;
-  }
-  #lb-count {
-    position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
-    color: var(--muted); font-size: 0.9rem; letter-spacing: 0.08em;
-  }
-
-  @media (max-width: 780px) {
-    main { grid-template-columns: 1fr; }
-    .gallery-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-</style>
+<link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 
 <div id="sparks"><canvas id="sparks-canvas"></canvas></div>
 
 <div class="page">
+  <nav class="site-nav" aria-label="Site">
+    <a href="index.html" aria-current="page">Home</a>
+    <a href="gallery.html">Gallery</a>
+  </nav>
+
   <header>
     <h1>K'os Mos</h1>
     <div class="title-line">A Foxy Fiery Kitsune</div>
@@ -166,152 +35,30 @@
       <p><strong>Bio:</strong> A storyteller first and a markswoman second, K'os Mos travels between data centers collecting tales worth setting to melody. You may hear her song upon the battlefield and be assured her bow is never far behind.</p>
     </section>
 
-    <section class="card wide">
-      <h2>Gallery</h2>
-      <div class="gallery-grid" id="gallery-grid">
-        <a class="shot" href="images/web/1.jpg"><img src="images/web/1.jpg" alt="K'os Mos screenshot 1" loading="lazy"></a>
-        <a class="shot" href="images/web/2.jpg"><img src="images/web/2.jpg" alt="K'os Mos screenshot 2" loading="lazy"></a>
-        <a class="shot" href="images/web/3.jpg"><img src="images/web/3.jpg" alt="K'os Mos screenshot 3" loading="lazy"></a>
-        <a class="shot" href="images/web/4.jpg"><img src="images/web/4.jpg" alt="K'os Mos screenshot 4" loading="lazy"></a>
-        <a class="shot" href="images/web/5.jpg"><img src="images/web/5.jpg" alt="K'os Mos screenshot 5" loading="lazy"></a>
-        <a class="shot" href="images/web/6.jpg"><img src="images/web/6.jpg" alt="K'os Mos screenshot 6" loading="lazy"></a>
-        <a class="shot" href="images/web/7.jpg"><img src="images/web/7.jpg" alt="K'os Mos screenshot 7" loading="lazy"></a>
-        <a class="shot" href="images/web/8.jpg"><img src="images/web/8.jpg" alt="K'os Mos screenshot 8" loading="lazy"></a>
-        <a class="shot" href="images/web/9.jpg"><img src="images/web/9.jpg" alt="K'os Mos screenshot 9" loading="lazy"></a>
-        <a class="shot" href="images/web/10.jpg"><img src="images/web/10.jpg" alt="K'os Mos screenshot 10" loading="lazy"></a>
-        <a class="shot" href="images/web/11.jpg"><img src="images/web/11.jpg" alt="K'os Mos screenshot 11" loading="lazy"></a>
-        <a class="shot" href="images/web/12.jpg"><img src="images/web/12.jpg" alt="K'os Mos screenshot 12" loading="lazy"></a>
+    <section class="card wide gallery-cta">
+      <div class="gallery-head">
+        <h2>Gallery</h2>
+        <span class="gallery-count">12 images</span>
       </div>
+      <p>Portraits, mischief, and a few quiet moments between performances — the full set lives on its own page.</p>
+      <a class="btn" href="gallery.html">View the gallery →</a>
     </section>
   </main>
 
   <footer>
     <span>❧</span> K'os Mos · Courtesan · Crystal &amp; Elemental <span>❧</span>
   </footer>
-
-  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
-    <button class="lb-btn" id="lb-close" aria-label="Close">×</button>
-    <button class="lb-btn" id="lb-prev" aria-label="Previous image">‹</button>
-    <img id="lb-img" src="" alt="K'os Mos screenshot, full view">
-    <button class="lb-btn" id="lb-next" aria-label="Next image">›</button>
-    <div id="lb-count"></div>
-  </div>
 </div>
 
-<script>
-(() => {
-  // Subtle flaming sparks background — sparse, slow, low opacity.
-  const canvas = document.getElementById('sparks-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, sparks;
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+  <button class="lb-btn" id="lb-close" aria-label="Close">×</button>
+  <button class="lb-btn" id="lb-prev" aria-label="Previous image">‹</button>
+  <img id="lb-img" src="" alt="K'os Mos screenshot, full view">
+  <button class="lb-btn" id="lb-next" aria-label="Next image">›</button>
+  <div id="lb-count"></div>
+</div>
 
-  const COUNT = window.innerWidth < 700 ? 22 : 40;
-
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  function makeSpark() {
-    return {
-      x: Math.random() * W,
-      y: H + Math.random() * H * 0.3,
-      r: 0.6 + Math.random() * 1.6,
-      vy: -(0.15 + Math.random() * 0.45),          // slow rise
-      vx: (Math.random() - 0.5) * 0.18,
-      drift: Math.random() * Math.PI * 2,
-      driftSpeed: 0.004 + Math.random() * 0.01,
-      life: 0,
-      maxLife: 400 + Math.random() * 500,
-      hue: 18 + Math.random() * 24                  // orange → amber
-    };
-  }
-
-  sparks = Array.from({ length: COUNT }, () => {
-    const s = makeSpark();
-    s.y = Math.random() * H;                        // scatter at start
-    s.life = Math.random() * s.maxLife;
-    return s;
-  });
-
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function tick() {
-    ctx.clearRect(0, 0, W, H);
-    for (const s of sparks) {
-      s.life++;
-      s.drift += s.driftSpeed;
-      s.x += s.vx + Math.sin(s.drift) * 0.15;
-      s.y += s.vy;
-
-      if (s.y < -10 || s.life > s.maxLife) Object.assign(s, makeSpark(), { y: H + 5, life: 0 });
-
-      const t = s.life / s.maxLife;
-      const alpha = 0.35 * Math.sin(Math.PI * t);   // fade in/out
-      if (alpha <= 0.01) continue;
-
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${s.hue}, 90%, 60%, ${alpha})`;
-      ctx.shadowColor = `hsla(${s.hue}, 95%, 55%, ${alpha})`;
-      ctx.shadowBlur = 6;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-    if (!prefersReduced) requestAnimationFrame(tick);
-  }
-  tick(); // draw one static frame even if reduced motion is on
-})();
-
-// ---------- Lightbox ----------
-(() => {
-  const shots = Array.from(document.querySelectorAll('.shot'));
-  const lb = document.getElementById('lightbox');
-  const img = document.getElementById('lb-img');
-  const count = document.getElementById('lb-count');
-  let idx = 0;
-
-  function show(i) {
-    idx = (i + shots.length) % shots.length;
-    img.src = shots[idx].querySelector('img').src;
-    count.textContent = (idx + 1) + ' / ' + shots.length;
-    lb.classList.add('open');
-    document.body.classList.add('lb-open');
-  }
-  function close() {
-    lb.classList.remove('open');
-    document.body.classList.remove('lb-open');
-    img.src = '';
-  }
-
-  shots.forEach((shot, i) => {
-    shot.addEventListener('click', e => { e.preventDefault(); show(i); });
-  });
-
-  document.getElementById('lb-prev').addEventListener('click', e => { e.stopPropagation(); show(idx - 1); });
-  document.getElementById('lb-next').addEventListener('click', e => { e.stopPropagation(); show(idx + 1); });
-  document.getElementById('lb-close').addEventListener('click', e => { e.stopPropagation(); close(); });
-  lb.addEventListener('click', close);
-
-  document.addEventListener('keydown', e => {
-    if (!lb.classList.contains('open')) return;
-    if (e.key === 'Escape') close();
-    else if (e.key === 'ArrowLeft') show(idx - 1);
-    else if (e.key === 'ArrowRight') show(idx + 1);
-  });
-
-  // Download friction: block right-click & drag on gallery and lightbox images.
-  // Note: this is deterrent only — determined users can still save via dev tools.
-  document.addEventListener('contextmenu', e => {
-    if (e.target.closest('.shot') || e.target === img) e.preventDefault();
-  });
-  document.addEventListener('dragstart', e => {
-    if (e.target.tagName === 'IMG') e.preventDefault();
-  });
-})();
-</script>
+<script src="assets/site.js"></script>
 
 </body>
 </html>

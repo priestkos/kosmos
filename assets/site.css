@@ -1,0 +1,242 @@
+/* ==========================================================================
+   K'os Mos — shared site styles
+   ========================================================================== */
+
+:root {
+  --bg: #131017;
+  --bg-2: #1b1620;
+  --card: #221b28;
+  --border: #3a2f42;
+  --ink: #ece4e4;
+  --muted: #9c8fa0;
+  --accent: #d8935a;
+  --accent-2: #b7654a;
+  --font-display: "Atkinson Hyperlegible", Georgia, serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+body.lb-open { overflow: hidden; }
+
+/* ---------- Flaming sparks background ---------- */
+#sparks {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+#sparks canvas { display: block; width: 100%; height: 100%; }
+
+.page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+.page--wide { max-width: 1400px; }
+
+/* ---------- Site nav ---------- */
+.site-nav {
+  display: flex; justify-content: center; gap: 4px;
+  margin-bottom: 6px;
+}
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.site-nav a:hover { color: var(--accent); border-color: var(--border); }
+.site-nav a[aria-current="page"] { color: var(--accent); border-color: var(--accent-2); }
+
+/* ---------- Header ---------- */
+header { text-align: center; padding: 40px 16px 34px; }
+header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+header h1.small { font-size: clamp(1.9rem, 4.5vw, 2.9rem); }
+header .title-line {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin-top: 6px; color: var(--accent); font-style: italic;
+  font-family: var(--font-display); font-size: 1.15rem;
+}
+header .title-line::before,
+header .title-line::after {
+  content: ""; height: 1px; width: 60px; background: var(--accent-2); opacity: 0.6;
+}
+header p.servers { margin-top: 12px; color: var(--muted); font-size: 0.95rem; letter-spacing: 0.06em; }
+
+/* ---------- Layout grid / cards ---------- */
+main { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 24px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px 26px;
+}
+.card h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--accent);
+  margin-bottom: 14px;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.wide { grid-column: 1 / -1; }
+
+/* ---------- Profile ---------- */
+.profile p { margin-bottom: 10px; }
+.profile strong { color: var(--accent); font-weight: 600; }
+
+/* ---------- Gallery ---------- */
+.gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.gallery-grid--wide { gap: 18px; }
+
+/* The dedicated gallery page runs on a 1400px canvas — earn the extra width */
+@media (min-width: 1200px) {
+  .gallery-grid--wide { grid-template-columns: repeat(4, 1fr); }
+}
+
+.gallery-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; margin-bottom: 14px;
+  border-bottom: 1px solid var(--border); padding-bottom: 8px;
+}
+.gallery-head h2 { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+.gallery-count { color: var(--muted); font-size: 0.85rem; letter-spacing: 0.08em; }
+
+/* Content links share one treatment. :not(.shot) keeps gallery tiles intact —
+   they carry their own border; :not(.btn) keeps the CTA button's own border,
+   since this rule outranks `.btn` on specificity and would blank its bottom edge. */
+.card a:not(.shot):not(.btn),
+.gallery-count a,
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s, color 0.2s;
+}
+.card a:not(.shot):not(.btn):hover,
+.gallery-count a:hover,
+footer a:hover { color: var(--ink); border-bottom-color: var(--accent-2); }
+
+.shot {
+  display: block;
+  aspect-ratio: 1/1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: zoom-in;
+  color: inherit;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.shot:hover { border-color: var(--accent-2); transform: translateY(-2px); }
+.shot img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: blur(10px);
+  transform: scale(1.06);
+  transition: filter 0.35s ease, transform 0.35s ease;
+}
+.shot:hover img,
+.shot:focus-visible img {
+  filter: blur(0);
+  transform: scale(1);
+}
+/* Touch devices never hover — reveal on press instead */
+@media (hover: none) {
+  .shot:active img { filter: blur(0); transform: scale(1); }
+}
+
+/* Staggered entrance for the dedicated gallery page */
+.reveal { animation: rise 0.5s ease both; animation-delay: calc(var(--i, 0) * 45ms); }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+}
+
+/* ---------- Gallery CTA (homepage) ---------- */
+.gallery-cta p { color: var(--muted); margin-bottom: 18px; max-width: 60ch; }
+.btn {
+  display: inline-block;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid var(--accent-2);
+  border-radius: 4px;
+  padding: 11px 22px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn:hover {
+  background: var(--accent-2);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+/* ---------- Footer ---------- */
+footer { text-align: center; margin-top: 48px; padding: 20px; color: var(--muted); font-size: 0.85rem; }
+footer span { color: var(--accent-2); }
+
+/* ---------- Lightbox ---------- */
+#lightbox {
+  position: fixed; inset: 0; z-index: 10;
+  background: rgba(10, 8, 12, 0.97);
+  display: none; align-items: center; justify-content: center;
+  padding: 40px 70px;
+}
+#lightbox.open { display: flex; }
+#lightbox img {
+  max-width: 100%; max-height: 100%;
+  border-radius: 6px; border: 1px solid var(--border);
+  box-shadow: 0 8px 60px rgba(0, 0, 0, 0.7);
+}
+.lb-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(34, 27, 40, 0.85);
+  border: 1px solid var(--border); border-radius: 50%;
+  width: 46px; height: 46px;
+  color: var(--ink); font-size: 1.3rem; line-height: 1;
+  cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+.lb-btn:hover { border-color: var(--accent-2); color: var(--accent); }
+#lb-prev { left: 14px; }
+#lb-next { right: 14px; }
+#lb-close {
+  position: absolute; top: 16px; right: 18px; transform: none;
+  width: 40px; height: 40px; font-size: 1.5rem;
+}
+#lb-count {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+  color: var(--muted); font-size: 0.9rem; letter-spacing: 0.08em;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .gallery-grid--wide { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 780px) {
+  main { grid-template-columns: 1fr; }
+  .gallery-grid,
+  .gallery-grid--wide { grid-template-columns: repeat(2, 1fr); }
+  #lightbox { padding: 24px 56px; }
+}
