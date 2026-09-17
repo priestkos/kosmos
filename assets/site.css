@@ -11,6 +11,8 @@
   --muted: #9c8fa0;
   --accent: #d8935a;
   --accent-2: #b7654a;
+  --glow-orange: #eaa96d;
+  --glow-purple: #bd95dc;
   --font-display: "Atkinson Hyperlegible", Georgia, serif;
   --font-body: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
 }
@@ -106,6 +108,23 @@ main { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 24p
   -webkit-hyphens: auto;
 }
 .profile strong { color: var(--accent); font-weight: 600; }
+
+/* Venue names in the Workplaces line glow in their own colour on hover —
+   orange for The Succubus Den, purple for The Velvet Temptress. */
+.glow {
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+.glow-orange:hover {
+  color: var(--glow-orange);
+  text-shadow: 0 0 6px rgba(234, 169, 109, 0.6), 0 0 16px rgba(234, 169, 109, 0.3);
+}
+.glow-purple:hover {
+  color: var(--glow-purple);
+  text-shadow: 0 0 6px rgba(189, 149, 220, 0.6), 0 0 16px rgba(189, 149, 220, 0.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .glow { transition: none; }
+}
 
 /* ---------- Gallery ---------- */
 .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
