@@ -208,8 +208,8 @@ footer a:hover { color: var(--ink); border-bottom-color: var(--accent-2); }
 
 /* ---------- Elsewhere card: animated venue links ---------- */
 .links-card .link-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 4px;
 }
@@ -219,14 +219,16 @@ footer a:hover { color: var(--ink); border-bottom-color: var(--accent-2); }
   isolation: isolate;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 14px 26px;
+  padding: 14px 18px;
   border: 1px solid var(--accent-2);
   border-radius: 6px;
   color: var(--accent);
   text-decoration: none;
   font-size: 0.92rem;
   letter-spacing: 0.06em;
+  text-align: center;
   background: linear-gradient(180deg, rgba(216, 147, 90, 0.07), rgba(183, 101, 74, 0.02));
   transition: color 0.25s, border-color 0.25s, transform 0.25s, box-shadow 0.25s, background 0.25s;
 }
@@ -241,8 +243,10 @@ footer a:hover { color: var(--ink); border-bottom-color: var(--accent-2); }
   transform: translateX(-160%);
   animation: link-sweep 5s ease-in-out infinite;
 }
-/* offset the second button so the sweeps do not march in lockstep */
-.link-btn:nth-child(2)::after { animation-delay: 2.5s; }
+/* stagger every button so no two sweeps march in lockstep */
+.link-btn:nth-child(2)::after { animation-delay: 1.25s; }
+.link-btn:nth-child(3)::after { animation-delay: 2.5s; }
+.link-btn:nth-child(4)::after { animation-delay: 3.75s; }
 
 .link-btn .link-dot {
   color: var(--accent-2);
@@ -274,7 +278,7 @@ footer a:hover { color: var(--ink); border-bottom-color: var(--accent-2); }
 }
 
 @media (max-width: 480px) {
-  .link-btn { flex: 1 1 100%; justify-content: center; }
+  .links-card .link-row { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---------- Footer ---------- */
