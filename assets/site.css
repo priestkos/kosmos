@@ -206,10 +206,19 @@ footer a:hover { color: var(--ink); border-bottom-color: var(--accent-2); }
   border-color: var(--accent);
 }
 
-/* ---------- Elsewhere card: animated venue links ---------- */
+/* ---------- Other Links card: animated venue links ---------- */
+/* Flex column so the 2x2 grid can grow to fill the card's height and the four
+   boxes sit evenly spread, rather than clustering at the top with dead space
+   beneath (the card stretches to match the taller Gallery card beside it). */
+.links-card {
+  display: flex;
+  flex-direction: column;
+}
 .links-card .link-row {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 12px;
   margin-top: 4px;
 }
