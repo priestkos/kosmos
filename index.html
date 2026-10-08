@@ -1,117 +1,498 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K'os Mos — Courtesan of Balmung &amp; Tonberry</title>
-<meta name="description" content="K'os Mos — a foxy fiery kitsune. Bard, courtesan and mercenary of Balmung and Tonberry.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K'os Mos — The Crimson Kitsune · Cinematic Experience</title>
+  <meta name="description" content="Cinematic scrollytelling dossier for K'os Mos — Courtesan of Balmung & Tonberry, Wandering Bard & Mercenary. Real-time 3D foxfire constellation, split-depth layers, and parallax narrative.">
+  <link rel="icon" href="data:,">
+
+  <!-- Editorial & Display Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+JP:wght@400;600;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-<div id="sparks"><canvas id="sparks-canvas"></canvas></div>
+  <!-- Ambient Audio Soundscape (Web Audio API Synthesizer) -->
+  <div id="audio-pill" class="audio-pill" title="Toggle Celestial Soundscape">
+    <div class="audio-waves" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <span class="audio-label">SOUND: OFF</span>
+  </div>
 
-<div class="page">
-  <nav class="site-nav" aria-label="Site">
-    <a href="index.html" aria-current="page">Home</a>
-    <a href="gallery.html">Gallery</a>
-  </nav>
+  <!-- Background WebGL 3D Constellation Canvas -->
+  <div id="webgl-stage" aria-hidden="true">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+  <div class="stage-bottom-blur" aria-hidden="true"></div>
 
-  <header>
-    <h1>K'os Mos</h1>
-    <div class="title-line">A Foxy Fiery Kitsune</div>
-    <p class="servers">Balmung · Crystal &nbsp;⟡&nbsp; Tonberry · Elemental</p>
+  <!-- Film Grain, Cinematic Scanlines, and Vignette -->
+  <div class="fx-vignette" aria-hidden="true"></div>
+  <div class="fx-grain" aria-hidden="true"></div>
+  <div class="fx-anamorphic-flare" aria-hidden="true"></div>
+
+  <!-- Progress Bar & Scrollytelling Stage Tracker -->
+  <div id="scroll-progress-line" class="scroll-progress-bar" style="width: 0%;"></div>
+
+  <!-- Global Floating HUD / Master Header -->
+  <header class="cinematic-nav">
+    <div class="nav-brand">
+      <div class="brand-crest">
+        <span class="fox-emblem">狐</span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">K'OS MOS</span>
+        <span class="brand-sub">FFXIV</span>
+      </div>
+    </div>
+
+    <nav class="nav-chapters" aria-label="Chapters">
+      <a href="#act-prologue" class="chapter-link active" data-act="0"><span class="ch-num">01</span><span class="ch-name">PROLOGUE</span></a>
+      <a href="#act-origins" class="chapter-link" data-act="1"><span class="ch-num">02</span><span class="ch-name">DOSSIER</span></a>
+      <a href="#act-traits" class="chapter-link" data-act="2"><span class="ch-num">03</span><span class="ch-name">TRAITS</span></a>
+      <a href="#act-gallery" class="chapter-link" data-act="3"><span class="ch-num">04</span><span class="ch-name">ARCHIVE</span></a>
+      <a href="#act-sanctuaries" class="chapter-link" data-act="4"><span class="ch-num">05</span><span class="ch-name">LINKS</span></a>
+    </nav>
+
+    <div class="nav-meta">
+    </div>
   </header>
 
-  <main>
-    <section class="card profile wide">
-      <h2>Profile</h2>
-      <p><strong>Race:</strong> Kitsune</p>
-      <p><strong>Class:</strong> Bard, courtesan, and mercenary for hire, whose melodies carry as easily through battlefield chaos as candlelit parlors.</p>
-      <p><strong>Homes:</strong> The streets and taverns of Balmung and the quieter alleys of Tonberry.</p>
-      <p><strong>Bio:</strong> A storyteller first and a markswoman second, K'os Mos roams across data centers and distant lands alike, collecting tales worth setting to melody. Hear her song upon the battlefield, and rest assured her bow is never far behind.</p>
-      <p><strong>Workplaces:</strong> <span class="glow glow-orange">The Succubus Den</span> (Materia · OCE) and <span class="glow glow-purple">The Velvet Temptress</span> (Dynamis · NA).</p>
+  <!-- Left Flank Telemetry HUD -->
+  <aside class="telemetry-hud" aria-hidden="true">
+    <div class="hud-item"><span class="hud-lbl">AETHERIC FREQ</span><span class="hud-val" id="hud-freq">432.08 Hz</span></div>
+    <div class="hud-item"><span class="hud-lbl">CONSTELLATION</span><span class="hud-val accent-val" id="hud-constellation">CELESTIAL EMBLEM</span></div>
+    <div class="hud-item"><span class="hud-lbl">CAMERA DEPTH</span><span class="hud-val" id="hud-depth">Z: 140.0</span></div>
+  </aside>
+
+  <!-- Right Flank Quick Stage Rail -->
+  <aside class="quick-rail" aria-hidden="true">
+    <div class="rail-indicator" id="rail-pin"></div>
+    <span class="rail-dot active" data-target="act-prologue" title="Prologue"></span>
+    <span class="rail-dot" data-target="act-origins" title="Origins"></span>
+    <span class="rail-dot" data-target="act-traits" title="Traits"></span>
+    <span class="rail-dot" data-target="act-gallery" title="Archive"></span>
+    <span class="rail-dot" data-target="act-sanctuaries" title="Links"></span>
+  </aside>
+
+  <!-- MAIN SCROLLYTELLING CONTAINER -->
+  <main id="scrolly-container">
+
+    <!-- ========================================================
+         ACT 01: PROLOGUE / HERO
+         ======================================================== -->
+    <section class="story-section act-hero" id="act-prologue" data-shape="fox">
+      <div class="hero-backdrop-glow" aria-hidden="true"></div>
+      
+      <div class="hero-split-depth-wrap" data-parallax="0.15">
+        <div class="kanji-background" aria-hidden="true">紅蓮の妖狐</div>
+      </div>
+
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <span class="diamond-sep">◆</span>
+          <span>A FOXY FIERY KITSUNE</span>
+          <span class="diamond-sep">◆</span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="title-line-2">K'OS MOS</span>
+        </h1>
+
+        <div class="hero-lead-card glass-panel" data-tilt>
+          <div class="card-edge-glow"></div>
+          <p class="hero-lead">
+            Wandering Bard, Courtesan, and Mercenary for hire. Her melodies carry as effortlessly through chaotic frontlines as through dim, silk-draped parlors.
+          </p>
+          <div class="hero-specs-row">
+            <div class="spec-col">
+              <span class="spec-label">REGIONS</span>
+              <span class="spec-data">Balmung &bull; Tonberry</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-scroll-cue">
+          <div class="cue-mouse">
+            <div class="cue-wheel"></div>
+          </div>
+          <span class="cue-text">SCROLL TO KNOW MORE ABOUT THE KITSUNE</span>
+        </div>
+      </div>
     </section>
 
-    <section class="card wide traits-card">
-      <div class="gallery-head">
-        <h2>Traits</h2>
+    <!-- ========================================================
+         ACT 02: DOSSIER & THE BARD'S HARP (Constellation: Harp / Bow)
+         ======================================================== -->
+    <section class="story-section act-dossier" id="act-origins" data-shape="harp">
+      <div class="section-container">
+        <div class="split-story-grid">
+          
+          <!-- Left Column: Story Scrollytelling Panels -->
+          <div class="story-text-column">
+            <div class="chapter-tag"><span class="tag-num">02</span> / DOSSIER</div>
+            <h2 class="section-heading">Song upon the front, <br><em>Bow in the shadows.</em></h2>
+            
+            <div class="scrolly-card glass-panel" data-parallax="0.08">
+              <div class="panel-header">
+                <span class="panel-icon">◈</span>
+                <span class="panel-title">THE MERCENARY, THE BARD</span>
+              </div>
+              <p>
+                A storyteller first and a markswoman second, K'os Mos roams across data centers and distant lands alike, collecting tales worth setting to melody. Hear her song upon the battlefield, and rest assured her bow is never far behind.
+              </p>
+              <div class="quote-stripe">
+                “There is no chord more intoxicating than the breath hitching in a captive’s throat before I take hold.”
+              </div>
+            </div>
+
+            <div class="dossier-matrix glass-panel" data-parallax="0.12">
+              <div class="matrix-row">
+                <span class="matrix-key">RACE</span>
+                <span class="matrix-val">Kitsune (妖狐)</span>
+              </div>
+              <div class="matrix-row">
+                <span class="matrix-key">DISCIPLINES</span>
+                <span class="matrix-val">Courtesan &bull; Mercenary &bull; Bard</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive Parallax Character Portal -->
+          <div class="story-visual-column">
+            <div class="cinematic-portal-frame" data-tilt>
+              <div class="portal-backplate" style="background-image: url('assets/images/1.jpg');"></div>
+              <div class="portal-gradient-mask"></div>
+              <div class="portal-floating-cutout" style="background-image: url('assets/images/1.jpg');" data-depth="2.4"></div>
+
+              <div class="portal-floating-tag">
+                <span class="tag-japanese">妖狐</span>
+                <span class="tag-latin">K'OS MOS</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
-      <ul class="trait-list">
-        <li class="trait">
-          <h3 class="trait-name">Kitsune's Sight</h3>
-          <p class="trait-quote">“Lie through your pretty teeth all you want; one hypnotic look and I can already see every filthy thought you’re clenching around.”</p>
-        </li>
-        <li class="trait">
-          <h3 class="trait-name">Kitsune's Hoard</h3>
-          <p class="trait-quote">“Pour your coin right across my bare thighs and watch how cold gil makes me slick and turns me on.”</p>
-        </li>
-        <li class="trait">
-          <h3 class="trait-name">Kitsune's Touch</h3>
-          <p class="trait-quote">“Velvet foxfire that leaves my chosen pets flushed, dripping, and aching—or brands a disobedient hide until all they can do is whimper in submission.”</p>
-        </li>
-        <li class="trait">
-          <h3 class="trait-name">Kitsune's Presence</h3>
-          <p class="trait-quote">“I’ll hold you on the knife-edge of ruin for hours, breathing filth against your parted lips and slipping away the second your hips twitch to beg.”</p>
-        </li>
-        <li class="trait">
-          <h3 class="trait-name">Kitsune's Domination</h3>
-          <p class="trait-quote">“One quivering prey or a tangled knot of them on the sheets makes no difference; I mount, use, and break everyone in the room until the whole pack learns who owns them.”</p>
-        </li>
-      </ul>
     </section>
 
-    <section class="card gallery-cta">
-      <div class="gallery-head">
-        <h2>Gallery</h2>
-        <span class="gallery-count">12 images</span>
+    <!-- ========================================================
+         ACT 03: FIVE KITSUNE TRAITS (Constellation: Sacred Fan)
+         ======================================================== -->
+    <section class="story-section act-traits" id="act-traits" data-shape="fan">
+      <div class="section-container">
+        <div class="split-story-grid">
+          
+          <div class="story-text-column sticky-column">
+            <div class="chapter-tag"><span class="tag-num">03</span> / EMBODIED INSTINCTS</div>
+            <h2 class="section-heading">The Five <em>Traits</em> <br>of the Courtesan</h2>
+            <p class="section-subtext">
+              The canonical instincts that govern K'os Mos's every encounter. Each trait ignites a distinct harmonic frequency in the celestial constellation.
+            </p>
+            <div class="trait-selector-hud" id="trait-hud-list">
+              <button class="trait-btn active" data-trait="0"><span>I</span> SIGHT</button>
+              <button class="trait-btn" data-trait="1"><span>II</span> HOARD</button>
+              <button class="trait-btn" data-trait="2"><span>III</span> TOUCH</button>
+              <button class="trait-btn" data-trait="3"><span>IV</span> PRESENCE</button>
+              <button class="trait-btn" data-trait="4"><span>V</span> DOMINATION</button>
+            </div>
+          </div>
+
+          <div class="story-cards-scroll">
+            
+            <!-- Trait 1 -->
+            <div class="trait-card glass-panel" data-trait-card="0" data-tilt>
+              <div class="trait-card-num">TRAIT 01</div>
+              <h3 class="trait-title">Kitsune's Sight</h3>
+              <div class="trait-quote-box">
+                <p>“Lie through your pretty teeth all you want; one hypnotic look and I can already see every filthy thought you’re clenching around.”</p>
+              </div>
+              <div class="trait-subline">
+                <span>HYPNOTIC PIERCE</span> &bull; <span>PUPIL CONTRACTION</span> &bull; <span>MIND BREACH</span>
+              </div>
+            </div>
+
+            <!-- Trait 2 -->
+            <div class="trait-card glass-panel" data-trait-card="1" data-tilt>
+              <div class="trait-card-num">TRAIT 02</div>
+              <h3 class="trait-title">Kitsune's Hoard</h3>
+              <div class="trait-quote-box">
+                <p>“Pour your coin right across my bare thighs and watch how cold gil makes me slick and turns me on.”</p>
+              </div>
+              <div class="trait-subline">
+                <span>AVARICE &bull; GOLD COLDNESS &bull; MERCENARY PRIDE</span>
+              </div>
+            </div>
+
+            <!-- Trait 3 -->
+            <div class="trait-card glass-panel" data-trait-card="2" data-tilt>
+              <div class="trait-card-num">TRAIT 03</div>
+              <h3 class="trait-title">Kitsune's Touch</h3>
+              <div class="trait-quote-box">
+                <p>“Velvet foxfire that leaves my chosen pets flushed, dripping, and aching—or brands a disobedient hide until all they can do is whimper in submission.”</p>
+              </div>
+              <div class="trait-subline">
+                <span>VELVET BRAND &bull; FOXFIRE CARESS &bull; OBEDIENCE</span>
+              </div>
+            </div>
+
+            <!-- Trait 4 -->
+            <div class="trait-card glass-panel" data-trait-card="3" data-tilt>
+              <div class="trait-card-num">TRAIT 04</div>
+              <h3 class="trait-title">Kitsune's Presence</h3>
+              <div class="trait-quote-box">
+                <p>“I’ll hold you on the knife-edge of ruin for hours, breathing filth against your parted lips and slipping away the second your hips twitch to beg.”</p>
+              </div>
+              <div class="trait-subline">
+                <span>KNIFE-EDGE EDGING &bull; DELIBERATE AGONY &bull; DENIAL</span>
+              </div>
+            </div>
+
+            <!-- Trait 5 -->
+            <div class="trait-card glass-panel" data-trait-card="4" data-tilt>
+              <div class="trait-card-num">TRAIT 05</div>
+              <h3 class="trait-title">Kitsune's Domination</h3>
+              <div class="trait-quote-box">
+                <p>“One quivering prey or a tangled knot of them on the sheets makes no difference; I mount, use, and break everyone in the room until the whole pack learns who owns them.”</p>
+              </div>
+              <div class="trait-subline">
+                <span>PACK MATRON &bull; ABSOLUTE OWNERSHIP &bull; BROKEN WILL</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
-      <p>Portraits of mischief, with a few quiet moments interspersed.</p>
-      <a class="btn" href="gallery.html">View the gallery →</a>
     </section>
 
-    <section class="card links-card">
-      <div class="gallery-head">
-        <h2>Other Links</h2>
-      </div>
-      <div class="link-row">
-        <a class="link-btn" href="https://thesuccubusden.carrd.co/#kos" target="_blank" rel="noopener noreferrer">
-          <span class="link-dot" aria-hidden="true">✦</span>
-          <span>Succubus Den</span>
-        </a>
-        <a class="link-btn" href="https://thevelvettemptress.carrd.co/" target="_blank" rel="noopener noreferrer">
-          <span class="link-dot" aria-hidden="true">✦</span>
-          <span>Velvet Temptress</span>
-        </a>
-        <a class="link-btn" href="https://www.f-list.net/c/kos%20mos" target="_blank" rel="noopener noreferrer">
-          <span class="link-dot" aria-hidden="true">✦</span>
-          <span>F List</span>
-        </a>
-        <a class="link-btn" href="https://bdsmtest.org/r/VR2ZaaVQ" target="_blank" rel="noopener noreferrer">
-          <span class="link-dot" aria-hidden="true">✦</span>
-          <span>That Test</span>
-        </a>
+    <!-- ========================================================
+         ACT 04: 12-IMAGE CINEMATIC ARCHIVES & LIGHTBOX
+         ======================================================== -->
+    <section class="story-section act-gallery" id="act-gallery" data-shape="sphere">
+      <div class="section-container">
+        <div class="gallery-header-row">
+          <div>
+            <div class="chapter-tag"><span class="tag-num">04</span> / THE VISUAL ARCHIVE</div>
+            <h2 class="section-heading">Portraits of <em>Mischief</em></h2>
+          </div>
+          <div class="gallery-metrics">
+            <span class="gallery-badge">12 PHOTOGRAPHIC EXHIBITS</span>
+            <span class="gallery-badge highlight">4K NATIVE DEPTH</span>
+          </div>
+        </div>
+
+        <div class="gallery-cinematic-grid">
+          <!-- 12 Tiles with High Impact Hover Depth -->
+          <div class="cinematic-tile" data-index="0" data-img="assets/images/1.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/1.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 01</span>
+              <span class="tile-title">Lute in the Parlor</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="1" data-img="assets/images/2.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/2.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 02</span>
+              <span class="tile-title">Foxfire Bloom</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="2" data-img="assets/images/3.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/3.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 03</span>
+              <span class="tile-title">Balmung Midnight</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="3" data-img="assets/images/4.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/4.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 04</span>
+              <span class="tile-title">The Crimson Gaze</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="4" data-img="assets/images/5.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/5.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 05</span>
+              <span class="tile-title">Chamber Secrets</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="5" data-img="assets/images/6.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/6.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 06</span>
+              <span class="tile-title">Courtesan’s Reverie</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="6" data-img="assets/images/7.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/7.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 07</span>
+              <span class="tile-title">Silken Rest</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="7" data-img="assets/images/8.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/8.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 08</span>
+              <span class="tile-title">Temptress Whisper</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="8" data-img="assets/images/9.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/9.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 09</span>
+              <span class="tile-title">Succubus Hour</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="9" data-img="assets/images/10.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/10.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 10</span>
+              <span class="tile-title">Tonberry Shadows</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="10" data-img="assets/images/11.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/11.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 11</span>
+              <span class="tile-title">The Huntress Poise</span>
+            </div>
+          </div>
+
+          <div class="cinematic-tile" data-index="11" data-img="assets/images/12.jpg">
+            <div class="tile-inner" style="background-image: url('assets/images/12.jpg');"></div>
+            <div class="tile-depth-glow"></div>
+            <div class="tile-info">
+              <span class="tile-idx">EXHIBIT 12</span>
+              <span class="tile-title">Golden Dusk</span>
+            </div>
+          </div>
+
+        </div>
       </div>
     </section>
+
+    <!-- ========================================================
+         ACT 05: SANCTUARIES, WORKPLACES & OUTBOUND LINKS
+         ======================================================== -->
+    <section class="story-section act-sanctuaries" id="act-sanctuaries" data-shape="fox">
+      <div class="section-container">
+        <div class="center-heading-block">
+          <div class="chapter-tag"><span class="tag-num">05</span> / REALMS & SANCTUARIES</div>
+          <h2 class="section-heading">Step Beyond the <em>Threshold</em></h2>
+          <p class="section-subtext">
+            Official affiliations, patron lounges, and detailed entries
+          </p>
+        </div>
+
+        <div class="venues-grid">
+          
+          <a href="https://thesuccubusden.carrd.co/#kos" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
+            <div class="venue-decor">MATERIA &bull; OCE</div>
+            <h3 class="venue-name">The Succubus Den</h3>
+            <p class="venue-desc">An exotic haven where the finest courtesans and entertainers host discerning travelers under crimson lanterns.</p>
+            <div class="venue-link-cta"><span>ENTER SANCTUARY</span> <span>→</span></div>
+          </a>
+
+          <a href="https://thevelvettemptress.carrd.co/" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
+            <div class="venue-decor">DYNAMIS &bull; NA</div>
+            <h3 class="venue-name">The Velvet Temptress</h3>
+            <p class="venue-desc">A plush lounge steeped in midnight velvet, curated for deep desires, velvet whispers, and unforgettable nights.</p>
+            <div class="venue-link-cta"><span>ENTER SANCTUARY</span> <span>→</span></div>
+          </a>
+
+          <a href="https://www.f-list.net/c/kos%20mos" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
+            <div class="venue-decor">CODEX ARCHIVE</div>
+            <h3 class="venue-name">F-List Character Dossier</h3>
+            <p class="venue-desc">Comprehensive roleplay profile, detailed preferences, physical statistics, and background history.</p>
+            <div class="venue-link-cta"><span>INSPECT RECORD</span> <span>→</span></div>
+          </a>
+
+          <a href="https://bdsmtest.org/r/VR2ZaaVQ" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
+            <div class="venue-decor">PSYCHOLOGICAL EVALUATION</div>
+            <h3 class="venue-name">Alignment & Spectrum</h3>
+            <p class="venue-desc">Dominance orientation, sensory appetites, and behavioral spectrum verification for prospective patrons.</p>
+            <div class="venue-link-cta"><span>VIEW SPECTRUM</span> <span>→</span></div>
+          </a>
+
+        </div>
+
+        <footer class="cinematic-footer">
+          <div class="footer-fox-emblem">✦ 妖狐 ✦</div>
+          <p class="footer-credit">K'os Mos &bull; Courtesan &bull; Balmung (Crystal) &amp; Tonberry (Elemental)</p>
+        </footer>
+      </div>
+    </section>
+
   </main>
 
-  <footer>
-    <span>❧</span> K'os Mos · Courtesan · Crystal &amp; Elemental <span>❧</span>
-  </footer>
-</div>
+  <!-- Interactive 4K Lightbox Viewer -->
+  <div id="lightbox" class="lightbox-modal" role="dialog" aria-modal="true" aria-label="Cinematic Viewer">
+    <div class="lightbox-backdrop"></div>
+    <div class="lightbox-container">
+      <button class="lightbox-close" aria-label="Close Viewer">&times;</button>
+      <button class="lightbox-nav lightbox-prev" aria-label="Previous">&lsaquo;</button>
+      <div class="lightbox-content">
+        <img id="lightbox-img" src="" alt="High resolution portrait">
+        <div class="lightbox-caption">
+          <span id="lightbox-idx"></span>
+          <h4 id="lightbox-title"></h4>
+        </div>
+      </div>
+      <button class="lightbox-nav lightbox-next" aria-label="Next">&rsaquo;</button>
+    </div>
+  </div>
 
-<div id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
-  <button class="lb-btn" id="lb-close" aria-label="Close">×</button>
-  <button class="lb-btn" id="lb-prev" aria-label="Previous image">‹</button>
-  <img id="lb-img" src="" alt="K'os Mos screenshot, full view">
-  <button class="lb-btn" id="lb-next" aria-label="Next image">›</button>
-  <div id="lb-count"></div>
-</div>
+  <!-- Three.js Local Bundle -->
+  <script src="assets/vendor/three.min.js"></script>
 
-<script src="assets/site.js"></script>
+  <!-- Constellation 3D Engine & Split Depth Cinematic Controller -->
+  <script src="assets/cinematic.js"></script>
 
+  <!-- Auto-scroll helper for headless captures if hash is present -->
+  <script>
+    (function() {
+      function doJump() {
+        const hash = window.location.hash.replace('#', '');
+        if (hash) {
+          const el = document.getElementById(hash);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const absTop = window.pageYOffset + rect.top;
+            window.scrollTo(0, absTop);
+          }
+        }
+      }
+      window.addEventListener('load', () => setTimeout(doJump, 300));
+    })();
+  </script>
 </body>
 </html>
