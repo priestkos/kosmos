@@ -451,13 +451,11 @@
     mouse.targetY = -(e.clientY / window.innerHeight - 0.5) * 2;
   }
 
+  // Left Flank Telemetry HUD
   function switchConstellation(shapeKey) {
     if (!shapes[shapeKey] || activeShapeKey === shapeKey) return;
     activeShapeKey = shapeKey;
     targetPositions = shapes[shapeKey];
-
-    const hudEl = document.getElementById('hud-constellation');
-    if (hudEl) hudEl.textContent = SHAPE_NAMES[shapeKey] || 'CELESTIAL HARMONIC';
 
     if (window.soundscape) {
       window.soundscape.playChime(shapeKey === 'fox' ? 1.0 : shapeKey === 'harp' ? 1.25 : 1.5);
@@ -551,9 +549,6 @@
         // Soften lines toward bottom
         linesMaterial.opacity = 0.28 * (1 - scrollProgress * 0.65);
       }
-
-      const depthHud = document.getElementById('hud-depth');
-      if (depthHud) depthHud.textContent = `Z: ${(camera.position.z).toFixed(1)}`;
     }
 
     if (renderer && scene && camera) {
@@ -586,9 +581,65 @@
         const offset = (rect.top - window.innerHeight * 0.5) * factor;
         el.style.transform = `translate3d(0, ${offset.toFixed(1)}px, 0)`;
       });
+
+      // Hub & Spoke Clockwise Progressive Scroll Controller for Act 03 Traits
+      updateTraitsHubScroll();
+    }
+
+    // Progressive Clockwise Hub and Spoke reveals as Act 03 scrolls
+    function updateTraitsHubScroll() {
+      const traitsSection = document.getElementById('act-traits');
+      if (!traitsSection) return;
+
+      const rect = traitsSection.getBoundingClientRect();
+      const totalH = traitsSection.offsetHeight - window.innerHeight;
+      if (totalH <= 0) return;
+
+      // Fraction of progress through the pinned Act 03 section: 0 to 1
+      const progress = Math.min(1, Math.max(0, -rect.top / totalH));
+
+      // 5 Traits emerge clockwise sequentially and stay visible once reached:
+      // Trait 0 (Sight, 12 o'clock): emerges at progress >= 0.06
+      // Trait 1 (Hoard, 2:30 o'clock): emerges at progress >= 0.20
+      // Trait 2 (Touch, 4:45 o'clock): emerges at progress >= 0.34
+      // Trait 3 (Presence, 7:15 o'clock): emerges at progress >= 0.48
+      // Trait 4 (Domination, 9:30 o'clock): emerges at progress >= 0.62
+      // From 0.62 to 1.0, all 5 traits remain fully formed on screen as you continue scrolling
+      const thresholds = [0.06, 0.20, 0.34, 0.48, 0.62];
+      const satellites = document.querySelectorAll('.trait-satellite');
+      const spokes = document.querySelectorAll('.orbit-spoke');
+
+      thresholds.forEach((thresh, idx) => {
+        const isReached = progress >= thresh;
+        const sat = satellites[idx];
+
+        if (sat) {
+          if (isReached) {
+            activeThreadIndices.add(idx);
+            if (!sat.classList.contains('sat-visible')) {
+              sat.classList.add('sat-visible');
+              if (window.soundscape) {
+                window.soundscape.playChime(1.0 + idx * 0.14);
+              }
+            }
+          } else {
+            activeThreadIndices.delete(idx);
+            sat.classList.remove('sat-visible');
+          }
+
+          // Active pulse on the latest unlocked trait
+          const isLatest = isReached && (idx === thresholds.length - 1 || progress < thresholds[idx + 1]);
+          if (isLatest) {
+            sat.classList.add('sat-active');
+          } else {
+            sat.classList.remove('sat-active');
+          }
+        }
+      });
     }
 
     window.addEventListener('scroll', updateScrollMetrics, { passive: true });
+    window.addEventListener('resize', updateTraitsHubScroll, { passive: true });
 
     // IntersectionObserver for active chapters & shape morphs
     const observerOptions = {
@@ -701,20 +752,149 @@
   }
 
   // =========================================================================
-  // 5. TRAIT SELECTOR & HARMONIC SHIFT
+  // 5. ANIMATED WAVY THREADS WITH SPARKS & EMBERS FOR ACT 3 HUB & SPOKE
+  // =========================================================================
+  let threadSparks = [];
+  const activeThreadIndices = new Set();
+
+  function initWavyThreads() {
+    const canvas = document.getElementById('traits-threads-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let time = 0;
+
+    // Spoke target angles corresponding to the 5 satellites (Clockwise from top)
+    // 0: -90° (Top), 1: -18° (Top-Right), 2: +54° (Bottom-Right), 3: +126° (Bottom-Left), 4: +198° (Top-Left)
+    const targets = [
+      { x: 500, y: 165 },
+      { x: 861, y: 405 },
+      { x: 723, y: 807 },
+      { x: 277, y: 807 },
+      { x: 139, y: 405 }
+    ];
+
+    function drawThreads() {
+      requestAnimationFrame(drawThreads);
+      time += 0.028;
+
+      ctx.clearRect(0, 0, 1000, 1000);
+
+      // Only draw threads and emit sparks if at least one trait is active
+      if (activeThreadIndices.size === 0) return;
+
+      const cx = 500, cy = 500;
+
+      activeThreadIndices.forEach(idx => {
+        const tgt = targets[idx];
+        if (!tgt) return;
+
+        // Draw multiple glowing wavy sine-wave filaments
+        const dx = tgt.x - cx;
+        const dy = tgt.y - cy;
+        const dist = Math.hypot(dx, dy);
+        const normalX = -dy / dist;
+        const normalY = dx / dist;
+
+        // Core thread + glowing outer halo
+        [
+          { width: 3.5, alpha: 0.85, col: 'rgba(255, 68, 85, ' },
+          { width: 1.8, alpha: 1.0, col: 'rgba(245, 176, 65, ' }
+        ].forEach(layer => {
+          ctx.beginPath();
+          ctx.lineWidth = layer.width;
+
+          const steps = 36;
+          for (let step = 0; step <= steps; step++) {
+            const t = step / steps;
+            const baseX = cx + dx * t;
+            const baseY = cy + dy * t;
+
+            // Amplitude bows out in the middle (envelope)
+            const envelope = Math.sin(t * Math.PI);
+            const wave = Math.sin(t * 14 - time * 3.5 + idx * 1.8) * (14 * envelope)
+                       + Math.cos(t * 8 + time * 2.2) * (6 * envelope);
+
+            const px = baseX + normalX * wave;
+            const py = baseY + normalY * wave;
+
+            if (step === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+
+          const grad = ctx.createLinearGradient(cx, cy, tgt.x, tgt.y);
+          grad.addColorStop(0, layer.col + '0.2)');
+          grad.addColorStop(0.3, layer.col + (0.9 * layer.alpha) + ')');
+          grad.addColorStop(1, layer.col + (0.95 * layer.alpha) + ')');
+
+          ctx.strokeStyle = grad;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#ff2a44';
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        });
+
+        // Spawn dynamic sparkling embers along the wavy thread
+        if (Math.random() < 0.42) {
+          const t = 0.15 + Math.random() * 0.8;
+          const envelope = Math.sin(t * Math.PI);
+          const wave = Math.sin(t * 14 - time * 3.5 + idx * 1.8) * (14 * envelope);
+          const px = cx + dx * t + normalX * wave;
+          const py = cy + dy * t + normalY * wave;
+
+          threadSparks.push({
+            x: px,
+            y: py,
+            vx: (Math.random() - 0.5) * 1.8 + normalX * (Math.random() - 0.5) * 2.5,
+            vy: (Math.random() - 0.5) * 1.8 - 0.8, // upward ember drift
+            size: 1.2 + Math.random() * 2.4,
+            alpha: 1.0,
+            decay: 0.02 + Math.random() * 0.025,
+            hue: Math.random() > 0.4 ? 'gold' : 'crimson'
+          });
+        }
+      });
+
+      // Update & render sparks
+      for (let i = threadSparks.length - 1; i >= 0; i--) {
+        const s = threadSparks[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.alpha -= s.decay;
+
+        if (s.alpha <= 0) {
+          threadSparks.splice(i, 1);
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = s.hue === 'gold' 
+          ? `rgba(245, 176, 65, ${s.alpha})` 
+          : `rgba(255, 68, 85, ${s.alpha})`;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = s.hue === 'gold' ? '#f5b041' : '#ff2a44';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    drawThreads();
+  }
+
+  // =========================================================================
+  // 5. TRAIT SATELLITE INTERACTION & HARMONIC SHIFT
   // =========================================================================
   function initTraitSelector() {
-    const buttons = document.querySelectorAll('.trait-btn');
-    const cards = document.querySelectorAll('.trait-card');
+    const satellites = document.querySelectorAll('.trait-satellite');
 
-    buttons.forEach((btn, idx) => {
-      btn.addEventListener('click', () => {
-        buttons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    satellites.forEach((sat, idx) => {
+      sat.addEventListener('mouseenter', () => {
+        satellites.forEach(s => s.classList.remove('sat-active'));
+        sat.classList.add('sat-active');
 
-        if (cards[idx]) {
-          cards[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        activeThreadIndices.add(idx);
 
         if (window.soundscape) {
           window.soundscape.playChime(1.1 + idx * 0.15);
@@ -811,6 +991,7 @@
     animate();
     initScrollytelling();
     init3DTiltAndSplitDepth();
+    initWavyThreads();
     initTraitSelector();
     initLightbox();
     initAudioPill();

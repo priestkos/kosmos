@@ -33,7 +33,6 @@
   <!-- Film Grain, Cinematic Scanlines, and Vignette -->
   <div class="fx-vignette" aria-hidden="true"></div>
   <div class="fx-grain" aria-hidden="true"></div>
-  <div class="fx-anamorphic-flare" aria-hidden="true"></div>
 
   <!-- Progress Bar & Scrollytelling Stage Tracker -->
   <div id="scroll-progress-line" class="scroll-progress-bar" style="width: 0%;"></div>
@@ -64,9 +63,8 @@
 
   <!-- Left Flank Telemetry HUD -->
   <aside class="telemetry-hud" aria-hidden="true">
-    <div class="hud-item"><span class="hud-lbl">AETHERIC FREQ</span><span class="hud-val" id="hud-freq">432.08 Hz</span></div>
-    <div class="hud-item"><span class="hud-lbl">CONSTELLATION</span><span class="hud-val accent-val" id="hud-constellation">CELESTIAL EMBLEM</span></div>
-    <div class="hud-item"><span class="hud-lbl">CAMERA DEPTH</span><span class="hud-val" id="hud-depth">Z: 140.0</span></div>
+    <div class="hud-item"><span class="hud-lbl">A FOXY FIERY KITSUNE</span></div>
+    <div class="hud-item"><span class="hud-lbl">JOBS:</span><span class="hud-val accent-val">BRD, DNC, WAR, SGE, NIN</span></div>
   </aside>
 
   <!-- Right Flank Quick Stage Rail -->
@@ -93,12 +91,6 @@
       </div>
 
       <div class="hero-content">
-        <div class="hero-eyebrow">
-          <span class="diamond-sep">◆</span>
-          <span>A FOXY FIERY KITSUNE</span>
-          <span class="diamond-sep">◆</span>
-        </div>
-
         <h1 class="hero-title">
           <span class="title-line-2">K'OS MOS</span>
         </h1>
@@ -181,89 +173,95 @@
     </section>
 
     <!-- ========================================================
-         ACT 03: FIVE KITSUNE TRAITS (Constellation: Sacred Fan)
+         ACT 03: FIVE KITSUNE TRAITS (Hub & Spoke Clockwise Constellation)
          ======================================================== -->
     <section class="story-section act-traits" id="act-traits" data-shape="fan">
-      <div class="section-container">
-        <div class="split-story-grid">
-          
-          <div class="story-text-column sticky-column">
-            <div class="chapter-tag"><span class="tag-num">03</span> / EMBODIED INSTINCTS</div>
-            <h2 class="section-heading">The Five <em>Traits</em> <br>of the Courtesan</h2>
-            <p class="section-subtext">
-              The canonical instincts that govern K'os Mos's every encounter. Each trait ignites a distinct harmonic frequency in the celestial constellation.
-            </p>
-            <div class="trait-selector-hud" id="trait-hud-list">
-              <button class="trait-btn active" data-trait="0"><span>I</span> SIGHT</button>
-              <button class="trait-btn" data-trait="1"><span>II</span> HOARD</button>
-              <button class="trait-btn" data-trait="2"><span>III</span> TOUCH</button>
-              <button class="trait-btn" data-trait="3"><span>IV</span> PRESENCE</button>
-              <button class="trait-btn" data-trait="4"><span>V</span> DOMINATION</button>
+      <div class="traits-pinned-stage">
+        <div class="traits-hub-container">
+          <!-- Canvas for animated wavy threads with sparks & embers -->
+          <canvas id="traits-threads-canvas" class="traits-threads-canvas" width="1000" height="1000" aria-hidden="true"></canvas>
+
+          <!-- Ambient geometric radial compass lines & orbital rings -->
+          <svg class="traits-orbit-svg" viewBox="0 0 1000 1000" aria-hidden="true">
+            <circle cx="500" cy="500" r="105" class="orbit-ring ring-inner" />
+            <circle cx="500" cy="500" r="230" class="orbit-ring ring-mid" />
+            <circle cx="500" cy="500" r="390" class="orbit-ring ring-outer" />
+            <line x1="500" y1="50" x2="500" y2="950" class="orbit-axis" />
+            <line x1="50" y1="500" x2="950" y2="500" class="orbit-axis" />
+          </svg>
+
+          <!-- Central Hub: The Five Traits -->
+          <div class="traits-center-hub">
+            <div class="hub-crest">
+              <span class="hub-emblem">✦ 妖狐 ✦</span>
+            </div>
+            <h2 class="hub-title">The Five Traits</h2>
+          </div>
+
+          <!-- Clockwise Spoke Satellites (5 nodes) -->
+          <!-- 1. SIGHT: Top (12 o'clock, 0° / -90°) -->
+          <div class="trait-satellite sat-0" data-trait-idx="0">
+            <div class="sat-inner glass-panel">
+              <div class="sat-header">
+                <span class="sat-badge">I</span>
+                <span class="sat-label">TRAIT 01</span>
+              </div>
+              <h3 class="sat-name">Kitsune's Sight</h3>
+              <p class="sat-quote">“Lie through your pretty teeth all you want; one hypnotic look and I can already see every filthy thought you’re clenching around.”</p>
+              <div class="sat-subline">HYPNOTIC &bull; MIND BREACH</div>
             </div>
           </div>
 
-          <div class="story-cards-scroll">
-            
-            <!-- Trait 1 -->
-            <div class="trait-card glass-panel" data-trait-card="0" data-tilt>
-              <div class="trait-card-num">TRAIT 01</div>
-              <h3 class="trait-title">Kitsune's Sight</h3>
-              <div class="trait-quote-box">
-                <p>“Lie through your pretty teeth all you want; one hypnotic look and I can already see every filthy thought you’re clenching around.”</p>
+          <!-- 2. HOARD: Top-Right (approx 2:30 o'clock, +72° / -18°) -->
+          <div class="trait-satellite sat-1" data-trait-idx="1">
+            <div class="sat-inner glass-panel">
+              <div class="sat-header">
+                <span class="sat-badge">II</span>
+                <span class="sat-label">TRAIT 02</span>
               </div>
-              <div class="trait-subline">
-                <span>HYPNOTIC PIERCE</span> &bull; <span>PUPIL CONTRACTION</span> &bull; <span>MIND BREACH</span>
-              </div>
+              <h3 class="sat-name">Kitsune's Hoard</h3>
+              <p class="sat-quote">“Pour your coin right across my bare thighs and watch how cold gil makes me slick and turns me on.”</p>
+              <div class="sat-subline">AVARICE &bull; GOLD COLDNESS</div>
             </div>
+          </div>
 
-            <!-- Trait 2 -->
-            <div class="trait-card glass-panel" data-trait-card="1" data-tilt>
-              <div class="trait-card-num">TRAIT 02</div>
-              <h3 class="trait-title">Kitsune's Hoard</h3>
-              <div class="trait-quote-box">
-                <p>“Pour your coin right across my bare thighs and watch how cold gil makes me slick and turns me on.”</p>
+          <!-- 3. TOUCH: Bottom-Right (approx 4:45 o'clock, +144° / +54°) -->
+          <div class="trait-satellite sat-2" data-trait-idx="2">
+            <div class="sat-inner glass-panel">
+              <div class="sat-header">
+                <span class="sat-badge">III</span>
+                <span class="sat-label">TRAIT 03</span>
               </div>
-              <div class="trait-subline">
-                <span>AVARICE &bull; GOLD COLDNESS &bull; MERCENARY PRIDE</span>
-              </div>
+              <h3 class="sat-name">Kitsune's Touch</h3>
+              <p class="sat-quote">“Velvet foxfire that leaves my chosen pets flushed, dripping, and aching—or brands a disobedient hide until all they can do is whimper in submission.”</p>
+              <div class="sat-subline">VELVET BRAND &bull; FOXFIRE CARESS</div>
             </div>
+          </div>
 
-            <!-- Trait 3 -->
-            <div class="trait-card glass-panel" data-trait-card="2" data-tilt>
-              <div class="trait-card-num">TRAIT 03</div>
-              <h3 class="trait-title">Kitsune's Touch</h3>
-              <div class="trait-quote-box">
-                <p>“Velvet foxfire that leaves my chosen pets flushed, dripping, and aching—or brands a disobedient hide until all they can do is whimper in submission.”</p>
+          <!-- 4. PRESENCE: Bottom-Left (approx 7:15 o'clock, +216° / +126°) -->
+          <div class="trait-satellite sat-3" data-trait-idx="3">
+            <div class="sat-inner glass-panel">
+              <div class="sat-header">
+                <span class="sat-badge">IV</span>
+                <span class="sat-label">TRAIT 04</span>
               </div>
-              <div class="trait-subline">
-                <span>VELVET BRAND &bull; FOXFIRE CARESS &bull; OBEDIENCE</span>
-              </div>
+              <h3 class="sat-name">Kitsune's Presence</h3>
+              <p class="sat-quote">“I’ll hold you on the knife-edge of ruin for hours, breathing filth against your parted lips and slipping away the second your hips twitch to beg.”</p>
+              <div class="sat-subline">KNIFE-EDGE &bull; AGONY &bull; DENIAL</div>
             </div>
+          </div>
 
-            <!-- Trait 4 -->
-            <div class="trait-card glass-panel" data-trait-card="3" data-tilt>
-              <div class="trait-card-num">TRAIT 04</div>
-              <h3 class="trait-title">Kitsune's Presence</h3>
-              <div class="trait-quote-box">
-                <p>“I’ll hold you on the knife-edge of ruin for hours, breathing filth against your parted lips and slipping away the second your hips twitch to beg.”</p>
+          <!-- 5. DOMINATION: Top-Left (approx 9:30 o'clock, +288° / +198°) -->
+          <div class="trait-satellite sat-4" data-trait-idx="4">
+            <div class="sat-inner glass-panel">
+              <div class="sat-header">
+                <span class="sat-badge">V</span>
+                <span class="sat-label">TRAIT 05</span>
               </div>
-              <div class="trait-subline">
-                <span>KNIFE-EDGE EDGING &bull; DELIBERATE AGONY &bull; DENIAL</span>
-              </div>
+              <h3 class="sat-name">Kitsune's Domination</h3>
+              <p class="sat-quote">“One quivering prey or a tangled knot of them on the sheets makes no difference; I mount, use, and break everyone in the room until the whole pack learns who owns them.”</p>
+              <div class="sat-subline">MATRON &bull; ABSOLUTE OWNERSHIP &bull; BROKEN WILL</div>
             </div>
-
-            <!-- Trait 5 -->
-            <div class="trait-card glass-panel" data-trait-card="4" data-tilt>
-              <div class="trait-card-num">TRAIT 05</div>
-              <h3 class="trait-title">Kitsune's Domination</h3>
-              <div class="trait-quote-box">
-                <p>“One quivering prey or a tangled knot of them on the sheets makes no difference; I mount, use, and break everyone in the room until the whole pack learns who owns them.”</p>
-              </div>
-              <div class="trait-subline">
-                <span>PACK MATRON &bull; ABSOLUTE OWNERSHIP &bull; BROKEN WILL</span>
-              </div>
-            </div>
-
           </div>
 
         </div>
@@ -477,21 +475,21 @@
   <!-- Constellation 3D Engine & Split Depth Cinematic Controller -->
   <script src="assets/cinematic.js"></script>
 
-  <!-- Auto-scroll helper for headless captures if hash is present -->
+  <!-- Auto-scroll helper for hash navigation -->
   <script>
     (function() {
-      function doJump() {
-        const hash = window.location.hash.replace('#', '');
-        if (hash) {
-          const el = document.getElementById(hash);
-          if (el) {
-            const rect = el.getBoundingClientRect();
-            const absTop = window.pageYOffset + rect.top;
-            window.scrollTo(0, absTop);
-          }
-        }
+      function checkAndJump() {
+        const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
+        if (!hash) return;
+        const target = document.getElementById(hash);
+        if (!target) return;
+
+        target.scrollIntoView({ behavior: 'instant', block: 'start' });
+        window.dispatchEvent(new Event('scroll'));
       }
-      window.addEventListener('load', () => setTimeout(doJump, 300));
+
+      window.addEventListener('DOMContentLoaded', () => setTimeout(checkAndJump, 50));
+      window.addEventListener('load', () => setTimeout(checkAndJump, 150));
     })();
   </script>
 </body>

@@ -41,15 +41,12 @@ html {
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
-  scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
   position: relative;
   min-height: 100vh;
   background-color: var(--bg-deep);
-  overflow-x: hidden;
   user-select: text;
 }
 
@@ -111,16 +108,7 @@ body {
 }
 
 .fx-anamorphic-flare {
-  position: fixed;
-  top: 15%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 68, 85, 0.4), rgba(245, 176, 65, 0.7), transparent);
-  box-shadow: 0 0 24px rgba(255, 68, 85, 0.6);
-  z-index: 3;
-  pointer-events: none;
-  opacity: 0.35;
+  display: none;
 }
 
 .scroll-progress-bar {
@@ -210,7 +198,6 @@ body {
   padding: 22px 48px;
   background: linear-gradient(180deg, rgba(7, 8, 12, 0.85) 0%, rgba(7, 8, 12, 0) 100%);
   backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .nav-brand {
@@ -411,6 +398,13 @@ body {
   align-items: center;
   justify-content: center;
   padding: 120px 48px;
+}
+
+.story-section.act-traits {
+  min-height: 450vh;
+  padding: 0;
+  display: block;
+  background: transparent;
 }
 
 .section-container {
@@ -995,99 +989,360 @@ body {
 }
 
 /* =========================================================================
-   ACT 04: FIVE KITSUNE TRAITS
+   ACT 03: FIVE KITSUNE TRAITS (Hub & Spoke Clockwise Constellation)
    ========================================================================= */
 
-.sticky-column {
+.act-traits {
+  position: relative;
+  min-height: 450vh !important; /* Extended scroll runway for progressive clockwise emergence */
+  padding: 0 !important;
+  display: block !important;
+}
+
+.traits-pinned-stage {
+  position: -webkit-sticky;
   position: sticky;
-  top: 140px;
-  align-self: start;
-}
-
-.trait-selector-hud {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 36px;
-}
-
-.trait-btn {
+  top: 90px;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 100px);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 18px;
-  border-radius: 8px;
-  background: rgba(16, 20, 32, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-align: left;
+  justify-content: center;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 20;
 }
 
-.trait-btn span {
-  color: var(--foxfire-gold);
-  font-weight: 700;
+.traits-hub-container {
+  position: relative;
+  width: min(94vw, 1340px);
+  height: min(80vh, 760px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
 }
 
-.trait-btn:hover, .trait-btn.active {
-  background: rgba(255, 42, 68, 0.12);
-  border-color: var(--crimson);
-  color: #fff;
-  box-shadow: 0 0 20px rgba(255, 42, 68, 0.25);
-  transform: translateX(8px);
+/* Canvas for dynamic wavy threads with sparks & embers */
+.traits-threads-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
 }
 
-.story-cards-scroll {
+/* Background Compass Orbit Rings & Spoke Lines */
+.traits-orbit-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.orbit-ring {
+  fill: none;
+  stroke: rgba(245, 176, 65, 0.12);
+  stroke-width: 1;
+  stroke-dasharray: 4 6;
+}
+
+.ring-inner {
+  stroke: rgba(255, 42, 68, 0.22);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 8;
+  animation: orbitRotateRev 90s linear infinite;
+  transform-origin: 500px 500px;
+}
+
+.ring-mid {
+  stroke: rgba(245, 176, 65, 0.16);
+  animation: orbitRotate 140s linear infinite;
+  transform-origin: 500px 500px;
+}
+
+.ring-outer {
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-dasharray: 2 10;
+}
+
+.orbit-axis {
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 1;
+}
+
+.orbit-spoke {
+  display: none;
+}
+
+@keyframes orbitRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbitRotateRev {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* Central Hub: The Five Traits */
+.traits-center-hub {
+  position: relative;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px 20px;
+  max-width: 230px;
+  background: radial-gradient(circle, rgba(22, 28, 44, 0.94) 0%, rgba(10, 13, 20, 0.96) 80%);
+  border: 1px solid rgba(245, 176, 65, 0.35);
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+  width: min(220px, 24vw);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 42, 68, 0.18);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  pointer-events: auto;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-.trait-card {
-  padding: 38px 42px;
+.traits-center-hub:hover {
+  border-color: var(--foxfire-gold);
+  box-shadow: 0 0 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(245, 176, 65, 0.3);
 }
 
-.trait-card-num {
+.hub-crest {
+  margin-bottom: 2px;
+}
+
+.hub-emblem {
+  font-size: 0.8rem;
+  letter-spacing: 0.25em;
+  color: var(--crimson);
+  text-shadow: 0 0 10px var(--crimson);
+}
+
+.hub-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 1.45vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  background: linear-gradient(135deg, #ffffff 30%, var(--foxfire-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 3px 0 6px 0;
+}
+
+.hub-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  color: var(--silver-mist);
+  opacity: 0.85;
+}
+
+.hub-indicator-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--foxfire-gold);
+  box-shadow: 0 0 6px var(--foxfire-gold);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+/* Satellites positioned radially in clockwise order */
+.trait-satellite {
+  position: absolute;
+  z-index: 25;
+  width: clamp(260px, 24vw, 340px);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  will-change: opacity, transform;
+}
+
+.trait-satellite.sat-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.trait-satellite.sat-active .sat-inner {
+  border-color: rgba(245, 176, 65, 0.55);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 42, 68, 0.25);
+  transform: translateY(-4px);
+}
+
+.sat-inner {
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: rgba(10, 13, 20, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+  transition: all 0.3s ease;
+}
+
+.sat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sat-badge {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.2em;
+  font-weight: 700;
   color: var(--crimson);
-  margin-bottom: 12px;
+  background: rgba(255, 42, 68, 0.14);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 42, 68, 0.25);
 }
 
-.trait-title {
+.sat-label {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+}
+
+.sat-name {
   font-family: var(--font-serif);
-  font-size: 1.85rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #fff;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
 }
 
-.trait-quote-box {
-  padding: 20px 24px;
-  background: rgba(7, 8, 12, 0.5);
-  border-left: 3px solid var(--foxfire-gold);
-  border-radius: 0 10px 10px 0;
-  margin-bottom: 24px;
-}
-
-.trait-quote-box p {
-  font-family: var(--font-serif);
+.sat-quote {
+  font-family: var(--font-sans);
   font-style: italic;
-  font-size: 1.15rem;
-  line-height: 1.65;
-  color: #fff;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #f1f5f9;
+  margin: 0 0 10px 0;
+  display: block;
 }
 
-.trait-subline {
+.sat-subline {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   letter-spacing: 0.12em;
-  color: var(--text-dim);
+  color: var(--foxfire-gold);
+  text-transform: uppercase;
+  font-weight: 500;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: normal;
+  line-height: 1.4;
+}
+
+/* Exact Hub-and-Spoke Radial Coordinates (Clockwise, 5 Spoke Symmetry)
+   Angle 0:  -90° (Top 12 o'clock)
+   Angle 1:  -18° (Top-Right ~2:30 o'clock)
+   Angle 2:  +54° (Bottom-Right ~4:45 o'clock)
+   Angle 3: +126° (Bottom-Left ~7:15 o'clock)
+   Angle 4: +198° (Top-Left ~9:30 o'clock)
+*/
+
+/* 1. SIGHT - 12 o'clock (Top Center) */
+.sat-0 {
+  top: 6%;
+  left: 50%;
+  transform: translate(-50%, 16px);
+}
+.sat-0.sat-visible {
+  transform: translate(-50%, 0);
+}
+
+/* 2. HOARD - Top-Right */
+.sat-1 {
+  top: 22%;
+  right: 1%;
+  transform: translate(0, 16px);
+}
+.sat-1.sat-visible {
+  transform: translate(0, 0);
+}
+
+/* 3. TOUCH - Bottom-Right */
+.sat-2 {
+  bottom: 2%;
+  right: 6%;
+  transform: translate(0, 16px);
+}
+.sat-2.sat-visible {
+  transform: translate(0, 0);
+}
+
+/* 4. PRESENCE - Bottom-Left */
+.sat-3 {
+  bottom: 2%;
+  left: 6%;
+  transform: translate(0, 16px);
+}
+.sat-3.sat-visible {
+  transform: translate(0, 0);
+}
+
+/* 5. DOMINATION - Top-Left */
+.sat-4 {
+  top: 22%;
+  left: 1%;
+  transform: translate(0, 16px);
+}
+.sat-4.sat-visible {
+  transform: translate(0, 0);
+}
+
+/* Responsive adjustments for mobile & small tablet */
+@media (max-width: 900px) {
+  .act-traits {
+    min-height: auto;
+    padding: 100px 24px;
+  }
+  .traits-pinned-stage {
+    position: static;
+    height: auto;
+    width: 100%;
+    overflow: visible;
+  }
+  .traits-hub-container {
+    height: auto;
+    width: 100%;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .traits-orbit-svg {
+    display: none;
+  }
+  .traits-center-hub {
+    position: static;
+    width: 100%;
+    max-width: 320px;
+    border-radius: 20px;
+    aspect-ratio: auto;
+    padding: 24px;
+  }
+  .trait-satellite {
+    position: static;
+    width: 100%;
+    max-width: 440px;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /* =========================================================================
