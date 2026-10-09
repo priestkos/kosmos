@@ -17,7 +17,7 @@
   class CelestialSoundscape {
     constructor() {
       this.ctx = null;
-      this.isPlaying = false;
+      this.isPlaying = true;
       this.masterGain = null;
       this.oscillators = [];
       this.filter = null;
@@ -31,7 +31,9 @@
 
       // Master output gain for ambient continuous drone chords
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      // Start with volume at active level since sound is on by default
+      const initialGain = this.isPlaying ? 0.35 : 0;
+      this.masterGain.gain.setValueAtTime(initialGain, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
 
       // Dedicated chime output gain connected directly to destination
@@ -72,6 +74,19 @@
         oscGain.connect(this.filter);
         osc.start();
         this.oscillators.push(osc);
+      });
+
+      // Automatically resume context on first real user gesture anywhere on the page
+      const unlockAudio = () => {
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+        ['click', 'pointerdown', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(ev => {
+          window.removeEventListener(ev, unlockAudio, true);
+        });
+      };
+      ['click', 'pointerdown', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(ev => {
+        window.addEventListener(ev, unlockAudio, { passive: true, capture: true });
       });
     }
 
@@ -1317,6 +1332,15 @@
     const label = pill?.querySelector('.audio-label');
 
     if (pill && label && window.soundscape) {
+      // Sync initial state (sound on by default)
+      if (window.soundscape.isPlaying) {
+        pill.classList.add('playing');
+        label.textContent = 'SOUND: ON';
+      } else {
+        pill.classList.remove('playing');
+        label.textContent = 'SOUND: OFF';
+      }
+
       pill.addEventListener('click', () => {
         const isPlaying = window.soundscape.toggle();
         if (isPlaying) {
