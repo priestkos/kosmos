@@ -4,6 +4,8 @@
    Award-Winning Editorial Typography & Spacing
    ========================================================================= */
 
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 :root {
   --bg-deep: #07080c;
   --bg-surface: #0e111a;
@@ -20,6 +22,7 @@
   --text-muted: #94a3b8;
   --text-dim: #64748b;
 
+  --font-atkinson: 'Atkinson Hyperlegible', sans-serif;
   --font-serif: 'Cinzel', serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -70,25 +73,9 @@ body {
   display: block;
 }
 
-/* Atmospheric bottom blur shield: softens particles as they drift toward the bottom */
+/* Atmospheric bottom blur shield: disabled on middle sections to avoid softening card text */
 .stage-bottom-blur {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 48vh;
-  background: linear-gradient(to bottom, 
-    transparent 0%, 
-    rgba(7, 8, 12, 0.45) 45%, 
-    rgba(7, 8, 12, 0.85) 85%, 
-    rgba(7, 8, 12, 0.98) 100%
-  );
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 50%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 50%);
-  z-index: 2;
-  pointer-events: none;
+  display: none;
 }
 
 .fx-vignette {
@@ -130,7 +117,7 @@ body {
   position: fixed;
   bottom: 28px;
   left: 32px;
-  z-index: 90;
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -140,6 +127,7 @@ body {
   border: 1px solid var(--border-subtle);
   backdrop-filter: blur(12px);
   cursor: pointer;
+  pointer-events: auto;
   transition: all 0.3s ease;
   user-select: none;
 }
@@ -364,22 +352,41 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  z-index: 80;
+  z-index: 90;
+  pointer-events: auto;
 }
 
 .rail-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.25s ease;
+}
+
+.rail-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--text-dim);
-  cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.rail-dot:hover, .rail-dot.active {
+.rail-dot:hover::after, .rail-dot.active::after {
   background: var(--crimson);
   box-shadow: 0 0 10px var(--crimson);
-  transform: scale(1.6);
+  transform: translate(-50%, -50%) scale(1.6);
 }
 
 /* =========================================================================
@@ -401,7 +408,7 @@ body {
 }
 
 .story-section.act-traits {
-  min-height: 450vh;
+  min-height: 650vh;
   padding: 0;
   display: block;
   background: transparent;
@@ -430,9 +437,9 @@ body {
 }
 
 .section-heading {
-  font-family: var(--font-serif);
+  font-family: 'Atkinson Hyperlegible', sans-serif !important;
   font-size: clamp(2.2rem, 4.2vw, 3.8rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.15;
   color: #fff;
   letter-spacing: -0.01em;
@@ -440,7 +447,9 @@ body {
 }
 
 .section-heading em {
+  font-family: 'Atkinson Hyperlegible', sans-serif !important;
   font-style: italic;
+  font-weight: 700;
   background: linear-gradient(135deg, var(--crimson) 0%, var(--foxfire-gold) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -766,38 +775,96 @@ body {
   text-align: right;
 }
 
-/* Character Portal Frame */
+/* Character Portal Frame: 3D Heavy Glass Cuboid Block */
 .story-visual-column {
   position: relative;
   display: flex;
   justify-content: center;
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
 }
 
 .cinematic-portal-frame {
   position: relative;
   width: 100%;
-  max-width: 480px;
-  aspect-ratio: 3/4;
-  border-radius: 20px;
+  max-width: 440px;
+  border-radius: 28px;
+  transform-style: preserve-3d;
+  /* Thick glass slab backing with visible refraction tint */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(18, 24, 38, 0.75) 40%, rgba(8, 11, 18, 0.90) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  /* Strong 3D glass cuboid depth: outer cast shadows, inner bevel refraction, and foxfire ambient rim */
+  box-shadow:
+    inset 0 3px 6px rgba(255, 255, 255, 0.75),
+    inset 3px 0 8px rgba(255, 255, 255, 0.35),
+    inset -3px 0 8px rgba(0, 0, 0, 0.7),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.85),
+    0 10px 25px rgba(0, 0, 0, 0.85),
+    0 30px 70px rgba(0, 0, 0, 0.95),
+    0 0 35px rgba(245, 176, 65, 0.35),
+    0 0 70px rgba(255, 42, 68, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 16px;
+  transform: rotateY(-6deg) rotateX(4deg);
+  transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1), box-shadow 0.4s ease;
+}
+
+/* Glass Block Prismatic Glare Reflection Across Top Edge */
+.cinematic-portal-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 25%, transparent 55%, rgba(255, 68, 85, 0.25) 100%);
+  pointer-events: none;
+  z-index: 15;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-left: 1.5px solid rgba(255, 255, 255, 0.65);
+}
+
+/* Glass Cuboid Outer Dimensional Lip / Refractive Edge */
+.cinematic-portal-frame::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 34px;
+  border: 1.5px solid rgba(245, 176, 65, 0.45);
+  box-shadow: 0 0 25px rgba(245, 176, 65, 0.25);
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(0.5px);
+}
+
+.cinematic-portal-frame .split-frame-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1215 / 2160; /* Exact aspect ratio of monochrome artwork */
+  border-radius: 18px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 42, 68, 0.2);
+  background: #040508;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  transform: translateZ(30px); /* Deep physical suspension inside the glass cuboid */
+  box-shadow:
+    inset 0 0 25px rgba(0, 0, 0, 0.95),
+    0 15px 35px rgba(0, 0, 0, 0.85);
 }
 
 .portal-backplate {
   position: absolute;
-  inset: -20px;
-  background-size: cover;
-  background-position: center;
-  filter: brightness(0.65) saturate(1.2) contrast(1.1);
-  transform: scale(1.05);
+  inset: 0;
+  background-size: 100% 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  filter: brightness(0.98) contrast(1.05);
+  transform: scale(1.0);
   transition: transform 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
 .portal-gradient-mask {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(7, 8, 12, 0.1) 0%, rgba(7, 8, 12, 0.85) 100%);
+  background: linear-gradient(180deg, rgba(7, 8, 12, 0.0) 0%, rgba(7, 8, 12, 0.25) 75%, rgba(7, 8, 12, 0.75) 100%);
   pointer-events: none;
 }
 
@@ -901,11 +968,12 @@ body {
 /* 1. Deep Receded Background */
 .layer-deep-bg {
   position: absolute;
-  inset: -15px;
-  background-size: cover;
-  background-position: center;
-  filter: brightness(0.65) blur(2px);
-  transform: scale(1.05) translateZ(-50px);
+  inset: 0;
+  background-size: 100% 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  filter: brightness(0.98);
+  transform: scale(1.0);
   transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
@@ -919,6 +987,7 @@ body {
 
 /* 2. SPLIT DEPTH BARS — Anchored in Middle Depth Plane */
 .depth-bar {
+  display: none; /* Removed neon bars to reveal the full bow, arrow, and illustration seamlessly */
   position: absolute;
   top: 0;
   bottom: 0;
@@ -938,29 +1007,28 @@ body {
   right: 28%;
 }
 
-/* 3. Popout Foreground Layer — BREAKS IN FRONT of the split-depth bars */
+/* 3. Popout Foreground Layer */
 .layer-subject-popout {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
+  background-size: 100% 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
   z-index: 20;
-  clip-path: polygon(24% 0%, 76% 0%, 78% 100%, 22% 100%);
-  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.95)) brightness(1.1);
-  transform: scale(1.02);
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.95)) brightness(1.05);
+  transform: scale(1.0);
   transition: transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1);
   pointer-events: none;
 }
 
-.layer-ember-overlay {
+.glass-block-embers {
   position: absolute;
   inset: 0;
-  z-index: 30;
-  background-image: radial-gradient(2px 2px at 30% 40%, #ff5566, transparent),
-                    radial-gradient(3px 3px at 70% 30%, #f5b041, transparent),
-                    radial-gradient(2px 2px at 45% 75%, #ffffff, transparent);
-  opacity: 0.6;
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
   pointer-events: none;
+  z-index: 30; /* Directly at the forefront of the inner stage, over the monochrome artwork */
 }
 
 .split-stage-caption {
@@ -994,7 +1062,7 @@ body {
 
 .act-traits {
   position: relative;
-  min-height: 450vh !important; /* Extended scroll runway for progressive clockwise emergence */
+  min-height: 650vh !important; /* Extended leisurely scroll runway for reading the five traits */
   padding: 0 !important;
   display: block !important;
 }
@@ -1002,26 +1070,28 @@ body {
 .traits-pinned-stage {
   position: -webkit-sticky;
   position: sticky;
-  top: 90px;
+  top: 130px;
   left: 0;
   width: 100%;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 145px);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
   pointer-events: none;
-  z-index: 20;
+  z-index: 40; /* Elevated above background stage and vignette */
 }
 
 .traits-hub-container {
   position: relative;
   width: min(94vw, 1340px);
-  height: min(80vh, 760px);
+  height: min(74vh, 700px);
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: auto;
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
 }
 
 /* Canvas for dynamic wavy threads with sparks & embers */
@@ -1031,17 +1101,21 @@ body {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 2;
+  z-index: 10;
 }
 
 /* Background Compass Orbit Rings & Spoke Lines */
 .traits-orbit-svg {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 7%;
+  width: 1000px;
+  height: 1000px;
   pointer-events: none;
   z-index: 1;
+  transform: translate(-50%, -50%) rotateX(28deg) rotateY(-18deg);
+  opacity: 0.65;
+  transition: opacity 0.2s ease;
 }
 
 .orbit-ring {
@@ -1089,32 +1163,121 @@ body {
   to { transform: rotate(0deg); }
 }
 
-/* Central Hub: The Five Traits */
-.traits-center-hub {
+/* Central 3D Celestial Sphere: Wireframe Orb with Inner Embers */
+.traits-sphere-globe {
+  position: absolute;
+  top: 50%;
+  left: 7%;
+  transform: translate(-50%, -50%);
+  z-index: 10; /* Cards passing in front have z-index 25-40 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: min(220px, 24vw);
+  height: min(220px, 24vw);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  pointer-events: auto;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 42, 68, 0.12) 0%, rgba(14, 18, 28, 0.35) 60%, rgba(5, 6, 10, 0.6) 100%);
+  border: 1.5px solid rgba(255, 215, 120, 0.65);
+  box-shadow:
+    inset 0 0 30px rgba(255, 42, 68, 0.35),
+    inset 0 0 50px rgba(245, 176, 65, 0.2),
+    0 0 40px rgba(255, 42, 68, 0.35),
+    0 0 70px rgba(245, 176, 65, 0.2);
+  transition: box-shadow 0.4s ease, opacity 0.2s ease;
+  overflow: hidden; /* Ensures inner canvas and surface stay perfectly clipped to the sphere */
+}
+
+.traits-sphere-globe:hover {
+  box-shadow:
+    inset 0 0 40px rgba(255, 42, 68, 0.5),
+    inset 0 0 65px rgba(245, 176, 65, 0.35),
+    0 0 60px rgba(255, 42, 68, 0.55),
+    0 0 95px rgba(245, 176, 65, 0.35);
+}
+
+.sphere-surface {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 3D Wireframe Armillary Rings & Latitude/Longitude Web */
+.sphere-grid-latitude {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0, transparent 16px, rgba(255, 215, 120, 0.22) 17px, transparent 18px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 16px, rgba(255, 68, 85, 0.2) 17px, transparent 18px);
+  mask-image: radial-gradient(circle, black 60%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle, black 60%, transparent 100%);
+}
+
+.sphere-grid-longitude {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 210, 120, 0.7);
+  box-shadow: 0 0 15px rgba(245, 176, 65, 0.5);
+  animation: sphereOrbitSpin 22s linear infinite;
+  transform: rotateX(65deg) rotateY(25deg);
+  pointer-events: none;
+}
+
+/* Second oblique wireframe ring for rich armillary sphere depth */
+.sphere-grid-longitude::after {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 1px dotted rgba(255, 68, 85, 0.65);
+  animation: sphereOrbitSpinRev 16s linear infinite;
+  transform: rotateX(-50deg) rotateY(40deg);
+}
+
+.sphere-core-glow {
+  position: absolute;
+  top: 25%;
+  left: 25%;
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 230, 160, 0.55) 0%, rgba(255, 42, 68, 0.3) 50%, transparent 80%);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.sphere-embers-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 6; /* Floats over the armillary grid and behind the title text */
+}
+
+@keyframes sphereOrbitSpin {
+  from { transform: rotateX(65deg) rotateY(25deg) rotateZ(0deg); }
+  to { transform: rotateX(65deg) rotateY(25deg) rotateZ(360deg); }
+}
+
+.sphere-content {
   position: relative;
-  z-index: 10;
+  z-index: 5;
+  padding: 10px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 16px 20px;
-  max-width: 230px;
-  background: radial-gradient(circle, rgba(22, 28, 44, 0.94) 0%, rgba(10, 13, 20, 0.96) 80%);
-  border: 1px solid rgba(245, 176, 65, 0.35);
-  border-radius: 50%;
-  aspect-ratio: 1 / 1;
-  width: min(220px, 24vw);
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 42, 68, 0.18);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  pointer-events: auto;
-  transition: box-shadow 0.4s ease, border-color 0.4s ease;
-}
-
-.traits-center-hub:hover {
-  border-color: var(--foxfire-gold);
-  box-shadow: 0 0 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(245, 176, 65, 0.3);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
 .hub-crest {
@@ -1122,74 +1285,51 @@ body {
 }
 
 .hub-emblem {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   letter-spacing: 0.25em;
-  color: var(--crimson);
-  text-shadow: 0 0 10px var(--crimson);
+  color: #fff;
+  text-shadow: 0 0 10px #ff2a44, 0 0 20px #ff2a44;
 }
 
 .hub-title {
   font-family: var(--font-serif);
-  font-size: clamp(1.05rem, 1.45vw, 1.35rem);
-  font-weight: 800;
+  font-size: clamp(1.05rem, 1.4vw, 1.35rem);
+  font-weight: 900;
   letter-spacing: 0.08em;
   line-height: 1.15;
-  background: linear-gradient(135deg, #ffffff 30%, var(--foxfire-gold) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 3px 0 6px 0;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 0 20px rgba(245, 176, 65, 0.6);
+  margin: 3px 0 0 0;
 }
 
-.hub-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.18em;
-  color: var(--silver-mist);
-  opacity: 0.85;
-}
-
-.hub-indicator-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--foxfire-gold);
-  box-shadow: 0 0 6px var(--foxfire-gold);
-  animation: pulseDot 2s infinite ease-in-out;
-}
-
-/* Satellites positioned radially in clockwise order */
+/* Satellites positioned along angled 3D carousel */
 .trait-satellite {
   position: absolute;
+  top: 50%;
+  left: 50%;
   z-index: 25;
-  width: clamp(260px, 24vw, 340px);
-  pointer-events: auto;
+  width: clamp(300px, 28vw, 380px);
+  pointer-events: none;
   opacity: 0;
-  transform: translate3d(0, 16px, 0);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-  will-change: opacity, transform;
-}
-
-.trait-satellite.sat-visible {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.25s ease;
 }
 
 .trait-satellite.sat-active .sat-inner {
-  border-color: rgba(245, 176, 65, 0.55);
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 42, 68, 0.25);
-  transform: translateY(-4px);
+  border-color: rgba(245, 176, 65, 0.95);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.98), 0 0 40px rgba(255, 42, 68, 0.55);
 }
 
 .sat-inner {
-  padding: 20px 24px;
-  border-radius: 14px;
-  background: rgba(10, 13, 20, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
-  transition: all 0.3s ease;
+  padding: 24px 28px;
+  border-radius: 16px;
+  background: rgba(8, 10, 16, 0.98); /* Solid opaque ground so text is 100% crisp */
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.95), 0 0 24px rgba(255, 42, 68, 0.25);
+  transition: all 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .sat-header {
@@ -1221,7 +1361,7 @@ body {
   font-family: var(--font-serif);
   font-size: 1.15rem;
   font-weight: 800;
-  color: #fff;
+  color: #ffffff;
   margin-bottom: 8px;
   letter-spacing: 0.02em;
 }
@@ -1229,9 +1369,10 @@ body {
 .sat-quote {
   font-family: var(--font-sans);
   font-style: italic;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: #f1f5f9;
+  font-size: 0.94rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #ffffff;
   margin: 0 0 10px 0;
   display: block;
 }
@@ -1257,54 +1398,10 @@ body {
    Angle 4: +198° (Top-Left ~9:30 o'clock)
 */
 
-/* 1. SIGHT - 12 o'clock (Top Center) */
-.sat-0 {
-  top: 6%;
+/* 3D Angled Path Positioning (Controlled dynamically by JS) */
+.sat-0, .sat-1, .sat-2, .sat-3, .sat-4 {
+  top: 50%;
   left: 50%;
-  transform: translate(-50%, 16px);
-}
-.sat-0.sat-visible {
-  transform: translate(-50%, 0);
-}
-
-/* 2. HOARD - Top-Right */
-.sat-1 {
-  top: 22%;
-  right: 1%;
-  transform: translate(0, 16px);
-}
-.sat-1.sat-visible {
-  transform: translate(0, 0);
-}
-
-/* 3. TOUCH - Bottom-Right */
-.sat-2 {
-  bottom: 2%;
-  right: 6%;
-  transform: translate(0, 16px);
-}
-.sat-2.sat-visible {
-  transform: translate(0, 0);
-}
-
-/* 4. PRESENCE - Bottom-Left */
-.sat-3 {
-  bottom: 2%;
-  left: 6%;
-  transform: translate(0, 16px);
-}
-.sat-3.sat-visible {
-  transform: translate(0, 0);
-}
-
-/* 5. DOMINATION - Top-Left */
-.sat-4 {
-  top: 22%;
-  left: 1%;
-  transform: translate(0, 16px);
-}
-.sat-4.sat-visible {
-  transform: translate(0, 0);
 }
 
 /* Responsive adjustments for mobile & small tablet */
@@ -1349,11 +1446,24 @@ body {
    ACT 05: 12-IMAGE ARCHIVES & LIGHTBOX
    ========================================================================= */
 
+.act-gallery {
+  scroll-margin-top: 80px;
+  padding-top: 140px !important;
+}
+
 .gallery-header-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 48px;
+  overflow: visible;
+}
+
+.gallery-header-row .section-heading {
+  line-height: 1.25;
+  padding-top: 6px;
+  padding-bottom: 4px;
+  overflow: visible;
 }
 
 .gallery-metrics {
@@ -1418,7 +1528,7 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20px 16px;
+  padding: 16px;
   background: linear-gradient(180deg, transparent 0%, rgba(7, 8, 12, 0.95) 100%);
   display: flex;
   flex-direction: column;
@@ -1428,16 +1538,10 @@ body {
 
 .tile-idx {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
   color: var(--foxfire-gold);
-}
-
-.tile-title {
-  font-family: var(--font-serif);
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: #fff;
+  font-weight: 600;
 }
 
 .cinematic-tile:hover {
@@ -1516,15 +1620,10 @@ body {
 
 #lightbox-idx {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  font-size: 0.82rem;
+  letter-spacing: 0.22em;
   color: var(--foxfire-gold);
-}
-
-#lightbox-title {
-  font-family: var(--font-serif);
-  font-size: 1.3rem;
-  color: #fff;
+  font-weight: 600;
 }
 
 .lightbox-close {

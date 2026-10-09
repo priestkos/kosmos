@@ -10,6 +10,7 @@
   <!-- Editorial & Display Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+JP:wght@400;600;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="assets/style.css">
@@ -68,13 +69,13 @@
   </aside>
 
   <!-- Right Flank Quick Stage Rail -->
-  <aside class="quick-rail" aria-hidden="true">
+  <aside class="quick-rail" aria-label="Quick Section Navigation">
     <div class="rail-indicator" id="rail-pin"></div>
-    <span class="rail-dot active" data-target="act-prologue" title="Prologue"></span>
-    <span class="rail-dot" data-target="act-origins" title="Origins"></span>
-    <span class="rail-dot" data-target="act-traits" title="Traits"></span>
-    <span class="rail-dot" data-target="act-gallery" title="Archive"></span>
-    <span class="rail-dot" data-target="act-sanctuaries" title="Links"></span>
+    <button type="button" class="rail-dot active" data-target="act-prologue" title="Prologue" aria-label="Act 01 Prologue"></button>
+    <button type="button" class="rail-dot" data-target="act-origins" title="Origins" aria-label="Act 02 Dossier"></button>
+    <button type="button" class="rail-dot" data-target="act-traits" title="Traits" aria-label="Act 03 Traits"></button>
+    <button type="button" class="rail-dot" data-target="act-gallery" title="Archive" aria-label="Act 04 Archive"></button>
+    <button type="button" class="rail-dot" data-target="act-sanctuaries" title="Links" aria-label="Act 05 Links"></button>
   </aside>
 
   <!-- MAIN SCROLLYTELLING CONTAINER -->
@@ -98,7 +99,7 @@
         <div class="hero-lead-card glass-panel" data-tilt>
           <div class="card-edge-glow"></div>
           <p class="hero-lead">
-            Wandering Bard, Courtesan, and Mercenary for hire. Her melodies carry as effortlessly through chaotic frontlines as through dim, silk-draped parlors.
+            Courtesan, Mercenary and Bard. Her melodies carry as effortlessly through chaotic frontlines as through dim, silk-draped parlors.
           </p>
           <div class="hero-specs-row">
             <div class="spec-col">
@@ -154,16 +155,21 @@
             </div>
           </div>
 
-          <!-- Right Column: Interactive Parallax Character Portal -->
+          <!-- Right Column: Interactive 3D Glass Block Character Portal -->
           <div class="story-visual-column">
-            <div class="cinematic-portal-frame" data-tilt>
-              <div class="portal-backplate" style="background-image: url('assets/images/1.jpg');"></div>
-              <div class="portal-gradient-mask"></div>
-              <div class="portal-floating-cutout" style="background-image: url('assets/images/1.jpg');" data-depth="2.4"></div>
+            <div class="cinematic-portal-frame" data-tilt data-split-stage>
+              <div class="split-frame-wrapper">
+                <!-- Single Crisp Monochrome Artwork Layer -->
+                <div class="portal-backplate layer-deep-bg" style="background-image: url('assets/images/monochrome.webp');"></div>
+                <div class="portal-gradient-mask"></div>
 
-              <div class="portal-floating-tag">
-                <span class="tag-japanese">妖狐</span>
-                <span class="tag-latin">K'OS MOS</span>
+                <!-- Forefront Cinematic Sparks & Embers Canvas (Directly on top of artwork face) -->
+                <canvas id="glass-block-embers" class="glass-block-embers" width="440" height="782" aria-hidden="true"></canvas>
+
+                <div class="portal-floating-tag">
+                  <span class="tag-japanese">妖狐</span>
+                  <span class="tag-latin">K'OS MOS</span>
+                </div>
               </div>
             </div>
           </div>
@@ -190,12 +196,21 @@
             <line x1="50" y1="500" x2="950" y2="500" class="orbit-axis" />
           </svg>
 
-          <!-- Central Hub: The Five Traits -->
-          <div class="traits-center-hub">
-            <div class="hub-crest">
-              <span class="hub-emblem">✦ 妖狐 ✦</span>
+          <!-- Central Hub: The Five Traits Sphere -->
+          <div class="traits-sphere-globe">
+            <div class="sphere-surface">
+              <div class="sphere-grid-latitude"></div>
+              <div class="sphere-grid-longitude"></div>
+              <div class="sphere-core-glow"></div>
             </div>
-            <h2 class="hub-title">The Five Traits</h2>
+            <!-- Inner floating sparks and embers inside the wireframe sphere (placed above grid) -->
+            <canvas id="sphere-embers-canvas" class="sphere-embers-canvas" width="220" height="220" aria-hidden="true"></canvas>
+            <div class="sphere-content">
+              <div class="hub-crest">
+                <span class="hub-emblem">✦ 妖狐 ✦</span>
+              </div>
+              <h2 class="hub-title">Traits</h2>
+            </div>
           </div>
 
           <!-- Clockwise Spoke Satellites (5 nodes) -->
@@ -275,123 +290,66 @@
       <div class="section-container">
         <div class="gallery-header-row">
           <div>
-            <div class="chapter-tag"><span class="tag-num">04</span> / THE VISUAL ARCHIVE</div>
+            <div class="chapter-tag"><span class="tag-num">04</span> / PORTRAIT ARCHIVE</div>
             <h2 class="section-heading">Portraits of <em>Mischief</em></h2>
-          </div>
-          <div class="gallery-metrics">
-            <span class="gallery-badge">12 PHOTOGRAPHIC EXHIBITS</span>
-            <span class="gallery-badge highlight">4K NATIVE DEPTH</span>
           </div>
         </div>
 
         <div class="gallery-cinematic-grid">
-          <!-- 12 Tiles with High Impact Hover Depth -->
-          <div class="cinematic-tile" data-index="0" data-img="assets/images/1.jpg">
+          <!-- Dynamically Numbered Exhibit Tiles -->
+          <div class="cinematic-tile" data-img="assets/images/1.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/1.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 01</span>
-              <span class="tile-title">Lute in the Parlor</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="1" data-img="assets/images/2.jpg">
+          <div class="cinematic-tile" data-img="assets/images/2.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/2.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 02</span>
-              <span class="tile-title">Foxfire Bloom</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="2" data-img="assets/images/3.jpg">
+          <div class="cinematic-tile" data-img="assets/images/3.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/3.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 03</span>
-              <span class="tile-title">Balmung Midnight</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="3" data-img="assets/images/4.jpg">
+          <div class="cinematic-tile" data-img="assets/images/4.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/4.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 04</span>
-              <span class="tile-title">The Crimson Gaze</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="4" data-img="assets/images/5.jpg">
+          <div class="cinematic-tile" data-img="assets/images/5.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/5.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 05</span>
-              <span class="tile-title">Chamber Secrets</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="5" data-img="assets/images/6.jpg">
+          <div class="cinematic-tile" data-img="assets/images/6.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/6.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 06</span>
-              <span class="tile-title">Courtesan’s Reverie</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="6" data-img="assets/images/7.jpg">
+          <div class="cinematic-tile" data-img="assets/images/7.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/7.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 07</span>
-              <span class="tile-title">Silken Rest</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="7" data-img="assets/images/8.jpg">
+          <div class="cinematic-tile" data-img="assets/images/8.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/8.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 08</span>
-              <span class="tile-title">Temptress Whisper</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="8" data-img="assets/images/9.jpg">
-            <div class="tile-inner" style="background-image: url('assets/images/9.jpg');"></div>
-            <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 09</span>
-              <span class="tile-title">Succubus Hour</span>
-            </div>
-          </div>
-
-          <div class="cinematic-tile" data-index="9" data-img="assets/images/10.jpg">
+          <div class="cinematic-tile" data-img="assets/images/10.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/10.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 10</span>
-              <span class="tile-title">Tonberry Shadows</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="10" data-img="assets/images/11.jpg">
+          <div class="cinematic-tile" data-img="assets/images/11.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/11.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 11</span>
-              <span class="tile-title">The Huntress Poise</span>
-            </div>
           </div>
 
-          <div class="cinematic-tile" data-index="11" data-img="assets/images/12.jpg">
+          <div class="cinematic-tile" data-img="assets/images/12.jpg">
             <div class="tile-inner" style="background-image: url('assets/images/12.jpg');"></div>
             <div class="tile-depth-glow"></div>
-            <div class="tile-info">
-              <span class="tile-idx">EXHIBIT 12</span>
-              <span class="tile-title">Golden Dusk</span>
-            </div>
           </div>
 
         </div>
@@ -404,10 +362,10 @@
     <section class="story-section act-sanctuaries" id="act-sanctuaries" data-shape="fox">
       <div class="section-container">
         <div class="center-heading-block">
-          <div class="chapter-tag"><span class="tag-num">05</span> / REALMS & SANCTUARIES</div>
-          <h2 class="section-heading">Step Beyond the <em>Threshold</em></h2>
+          <div class="chapter-tag"><span class="tag-num">05</span> / SANCTUARIES &amp; CODICES</div>
+          <h2 class="section-heading">Affiliations &amp; <em>Codex</em></h2>
           <p class="section-subtext">
-            Official affiliations, patron lounges, and detailed entries
+            Official affiliations, patron lounges, and detailed entries of K'os Mos
           </p>
         </div>
 
@@ -428,17 +386,17 @@
           </a>
 
           <a href="https://www.f-list.net/c/kos%20mos" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
-            <div class="venue-decor">CODEX ARCHIVE</div>
+            <div class="venue-decor">CODEX</div>
             <h3 class="venue-name">F-List Character Dossier</h3>
             <p class="venue-desc">Comprehensive roleplay profile, detailed preferences, physical statistics, and background history.</p>
             <div class="venue-link-cta"><span>INSPECT RECORD</span> <span>→</span></div>
           </a>
 
           <a href="https://bdsmtest.org/r/VR2ZaaVQ" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
-            <div class="venue-decor">PSYCHOLOGICAL EVALUATION</div>
-            <h3 class="venue-name">Alignment & Spectrum</h3>
-            <p class="venue-desc">Dominance orientation, sensory appetites, and behavioral spectrum verification for prospective patrons.</p>
-            <div class="venue-link-cta"><span>VIEW SPECTRUM</span> <span>→</span></div>
+            <div class="venue-decor">EVALUATION</div>
+            <h3 class="venue-name">BDSM Alignment</h3>
+            <p class="venue-desc">Orientation and Appetites for prospective patrons.</p>
+            <div class="venue-link-cta"><span>VIEW RESULTS</span> <span>→</span></div>
           </a>
 
         </div>
@@ -462,7 +420,6 @@
         <img id="lightbox-img" src="" alt="High resolution portrait">
         <div class="lightbox-caption">
           <span id="lightbox-idx"></span>
-          <h4 id="lightbox-title"></h4>
         </div>
       </div>
       <button class="lightbox-nav lightbox-next" aria-label="Next">&rsaquo;</button>

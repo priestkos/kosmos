@@ -24,13 +24,21 @@
     }
 
     init() {
+      if (this.ctx) return;
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
       this.ctx = new AudioCtx();
 
+      // Master output gain for ambient continuous drone chords
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
+
+      // Dedicated chime output gain connected directly to destination
+      // Volume remains perfectly stable and constant, never dropping off as user scrolls
+      this.chimeGain = this.ctx.createGain();
+      this.chimeGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      this.chimeGain.connect(this.ctx.destination);
 
       // Low pass resonant filter for soft celestial warmth
       this.filter = this.ctx.createBiquadFilter();
@@ -41,7 +49,7 @@
 
       // Celestial Drone Chords (D Minor Harmonic: D2, A2, D3, F3, A3, C#4)
       const freqs = [73.42, 110.00, 146.83, 174.61, 220.00, 277.18];
-      
+    
       freqs.forEach((freq, idx) => {
         const osc = this.ctx.createOscillator();
         const oscGain = this.ctx.createGain();
@@ -69,10 +77,10 @@
 
     toggle() {
       if (!this.ctx) this.init();
-      if (!this.ctx) return;
+      if (!this.ctx) return false;
 
       if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
+        this.ctx.resume().catch(() => {});
       }
 
       this.isPlaying = !this.isPlaying;
@@ -88,26 +96,32 @@
       return this.isPlaying;
     }
 
-    // Trigger subtle crystal harp chime on section transitions
+    // Trigger subtle crystal harp chime on section transitions (exact original pure warm sine D5 harmonic)
     playChime(pitchMultiplier = 1) {
       if (!this.ctx || !this.isPlaying) return;
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
       try {
         const now = this.ctx.currentTime;
         const chimeOsc = this.ctx.createOscillator();
-        const chimeGain = this.ctx.createGain();
+        const noteGain = this.ctx.createGain();
 
         chimeOsc.type = 'sine';
         chimeOsc.frequency.setValueAtTime(587.33 * pitchMultiplier, now); // D5
-        chimeGain.gain.setValueAtTime(0.08, now);
-        chimeGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
+        noteGain.gain.setValueAtTime(0.08, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
 
-        chimeOsc.connect(chimeGain);
-        chimeGain.connect(this.masterGain);
+        chimeOsc.connect(noteGain);
+        noteGain.connect(this.chimeGain || this.ctx.destination);
         chimeOsc.start(now);
         chimeOsc.stop(now + 2.8);
       } catch (e) {}
     }
   }
+
+  // Create immediate global soundscape instance accessible across all modules
+  window.soundscape = new CelestialSoundscape();
 
   // =========================================================================
   // 2. THREE.JS 3D CONSTELLATION ENGINE
@@ -452,14 +466,27 @@
   }
 
   // Left Flank Telemetry HUD
+  let lastChimedSectionId = 'act-prologue';
+
+  function onActEntered(sectionId, shapeKey) {
+    if (sectionId !== lastChimedSectionId) {
+      lastChimedSectionId = sectionId;
+      if (window.soundscape) {
+        const pitchMap = {
+          fox: 1.0,     // Act 01 / Act 05
+          harp: 1.25,   // Act 02
+          fan: 1.14,    // Act 03
+          sphere: 1.5   // Act 04
+        };
+        window.soundscape.playChime(pitchMap[shapeKey] || 1.0);
+      }
+    }
+  }
+
   function switchConstellation(shapeKey) {
     if (!shapes[shapeKey] || activeShapeKey === shapeKey) return;
     activeShapeKey = shapeKey;
     targetPositions = shapes[shapeKey];
-
-    if (window.soundscape) {
-      window.soundscape.playChime(shapeKey === 'fox' ? 1.0 : shapeKey === 'harp' ? 1.25 : 1.5);
-    }
   }
 
   // --- Main Animation Loop ---
@@ -557,6 +584,20 @@
   }
 
   // =========================================================================
+  // SHARED ACT 3 CAROUSEL & THREAD STATE
+  // =========================================================================
+  let sphereCenterNormalized = { x: 70, y: 500 }; // Extreme left (left: 7%)
+  const cardScreenCoords = [
+    { x: 500, y: 500 },
+    { x: 500, y: 500 },
+    { x: 500, y: 500 },
+    { x: 500, y: 500 },
+    { x: 500, y: 500 }
+  ];
+  let threadSparks = [];
+  const activeThreadIndices = new Set();
+
+  // =========================================================================
   // 3. SCROLLYTELLING CONTROLLER & SECTION INTERSECTION OBSERVER
   // =========================================================================
   function initScrollytelling() {
@@ -584,9 +625,17 @@
 
       // Hub & Spoke Clockwise Progressive Scroll Controller for Act 03 Traits
       updateTraitsHubScroll();
+
+      // Check current active section for topbar and rail indicators
+      checkActiveSectionOnScroll();
     }
 
-    // Progressive Clockwise Hub and Spoke reveals as Act 03 scrolls
+    // Hub & Spoke 3D Angled Carousel: One box in the spotlight at a time,
+    // centered in the viewport, all starting from the bottom-right and flying to the top-left.
+    let currentOrbitIndex = 0;
+    let targetOrbitIndex = 0;
+    let sphereOpacity = 0;
+
     function updateTraitsHubScroll() {
       const traitsSection = document.getElementById('act-traits');
       if (!traitsSection) return;
@@ -595,98 +644,252 @@
       const totalH = traitsSection.offsetHeight - window.innerHeight;
       if (totalH <= 0) return;
 
-      // Fraction of progress through the pinned Act 03 section: 0 to 1
-      const progress = Math.min(1, Math.max(0, -rect.top / totalH));
+      // Fraction of progress through Act 03 runway: 0 to 1
+      const rawProgress = Math.min(1, Math.max(0, -rect.top / totalH));
 
-      // 5 Traits emerge clockwise sequentially and stay visible once reached:
-      // Trait 0 (Sight, 12 o'clock): emerges at progress >= 0.06
-      // Trait 1 (Hoard, 2:30 o'clock): emerges at progress >= 0.20
-      // Trait 2 (Touch, 4:45 o'clock): emerges at progress >= 0.34
-      // Trait 3 (Presence, 7:15 o'clock): emerges at progress >= 0.48
-      // Trait 4 (Domination, 9:30 o'clock): emerges at progress >= 0.62
-      // From 0.62 to 1.0, all 5 traits remain fully formed on screen as you continue scrolling
-      const thresholds = [0.06, 0.20, 0.34, 0.48, 0.62];
+      // Central sphere fades in as we exit Act 2 (as rect.top enters viewport from bottom: 0.8 to 0.0),
+      // remains fully visible for the entirety of Act 3 (0.0 to 0.92),
+      // and smoothly fades from view on entering Act 4 (0.92 to 1.0).
+      const winH = window.innerHeight;
+      const sphereEl = document.querySelector('.traits-sphere-globe');
+      const orbitSvg = document.querySelector('.traits-orbit-svg');
+      const threadsCanvas = document.getElementById('traits-threads-canvas');
+
+      let targetSphereAlpha = 0;
+      if (rect.top > 0) {
+        // Exiting Act 2 -> entering Act 3: rect.top goes from winH down to 0
+        const enterFraction = Math.max(0, Math.min(1, (winH - rect.top) / (winH * 0.75)));
+        targetSphereAlpha = enterFraction;
+      } else if (rawProgress <= 0.92) {
+        // Entirety of Act 3
+        targetSphereAlpha = 1;
+      } else {
+        // Entering Act 4: smoothly fade out between 0.92 and 1.0
+        targetSphereAlpha = Math.max(0, 1 - (rawProgress - 0.92) / 0.08);
+      }
+      sphereOpacity = targetSphereAlpha;
+
+      if (sphereEl) {
+        sphereEl.style.opacity = targetSphereAlpha.toFixed(2);
+        sphereEl.style.pointerEvents = targetSphereAlpha > 0.3 ? 'auto' : 'none';
+      }
+      if (orbitSvg) {
+        orbitSvg.style.opacity = (targetSphereAlpha * 0.65).toFixed(2);
+      }
+      if (threadsCanvas) {
+        threadsCanvas.style.opacity = targetSphereAlpha.toFixed(2);
+      }
+
+      // Trait 1 trigger appearance set precisely to rawProgress 0.021
+      // rawProgress 0.021 -> index 0 (Trait 1) in spotlight
+      // rawProgress 1.000 -> index 4 (Trait 5) in spotlight
+      const START_THRESHOLD = 0.021;
+
+      let progress = 0;
+      if (rawProgress >= START_THRESHOLD) {
+        progress = (rawProgress - START_THRESHOLD) / (1 - START_THRESHOLD);
+        targetOrbitIndex = progress * 4.0;
+      } else {
+        targetOrbitIndex = (rawProgress / START_THRESHOLD) * 0.1;
+      }
+
+      // If user jumped directly (e.g. hash or instant scroll), snap currentOrbitIndex immediately
+      if (Math.abs(targetOrbitIndex - currentOrbitIndex) > 0.6) {
+        currentOrbitIndex = targetOrbitIndex;
+      }
+
+      renderTraitsOrbit(rawProgress);
+    }
+
+    function renderTraitsOrbit(progress) {
       const satellites = document.querySelectorAll('.trait-satellite');
-      const spokes = document.querySelectorAll('.orbit-spoke');
+      if (!satellites || satellites.length === 0) return;
 
-      thresholds.forEach((thresh, idx) => {
-        const isReached = progress >= thresh;
-        const sat = satellites[idx];
+      const container = document.querySelector('.traits-hub-container');
+      const cw = container ? container.clientWidth : 1000;
+      const ch = container ? container.clientHeight : 800;
 
-        if (sat) {
-          if (isReached) {
-            activeThreadIndices.add(idx);
-            if (!sat.classList.contains('sat-visible')) {
-              sat.classList.add('sat-visible');
-              if (window.soundscape) {
-                window.soundscape.playChime(1.0 + idx * 0.14);
-              }
-            }
-          } else {
-            activeThreadIndices.delete(idx);
-            sat.classList.remove('sat-visible');
-          }
+      // Central wireframe sphere is placed at the extreme left (left: 7%)
+      const sphereX = cw * 0.07;
+      const sphereY = ch * 0.50;
 
-          // Active pulse on the latest unlocked trait
-          const isLatest = isReached && (idx === thresholds.length - 1 || progress < thresholds[idx + 1]);
-          if (isLatest) {
+      sphereCenterNormalized = {
+        x: (sphereX / cw) * 1000,
+        y: (sphereY / ch) * 1000
+      };
+
+      // Trait card carousel is centered in the viewport
+      const cx = cw * 0.50;
+      const cy = ch * 0.50;
+
+      // Distinct diagonal vector: appear towards bottom-right and fly to top-left across center
+      // Vector: delta > 0 is waiting in bottom-right (+X, +Y).
+      // delta = 0 sits directly centered in spotlight (xOffset=0, yOffset=0, z-index 35).
+      // delta < 0 has passed through to top-left (-X, -Y).
+      const dirX = Math.min(360, cw * 0.32);
+      const dirY = Math.min(220, ch * 0.24);
+
+      satellites.forEach((sat, idx) => {
+        // Offset relative to currently centered item
+        const delta = idx - currentOrbitIndex;
+        const absDelta = Math.abs(delta);
+
+        let opacity = 0;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        if (absDelta < 0.95) {
+          // Strictly single active item in spotlight:
+          // peaks at 1.0 when delta = 0, fades completely to 0 as it leaves (by 0.85 delta)
+          opacity = Math.max(0, 1 - Math.pow(absDelta / 0.85, 1.8));
+
+          // 3D position along the angled diagonal trajectory:
+          // delta > 0 -> +dirX, +dirY (bottom-right)
+          // delta < 0 -> -dirX, -dirY (top-left)
+          xOffset = delta * dirX;
+          yOffset = delta * dirY;
+
+          sat.style.pointerEvents = absDelta < 0.35 ? 'auto' : 'none';
+        } else {
+          opacity = 0;
+          xOffset = delta > 0 ? dirX * 1.5 : -dirX * 1.5;
+          yOffset = delta > 0 ? dirY * 1.5 : -dirY * 1.5;
+          sat.style.pointerEvents = 'none';
+        }
+
+        // Apply pure 2D translate + opacity relative to the center position (left: 50%, top: 50%)
+        // Central sphere is z-index 10, so spotlight card is always in front (z: 35)
+        sat.style.left = '50%';
+        sat.style.top = '50%';
+        sat.style.transform = `translate(calc(-50% + ${Math.round(xOffset)}px), calc(-50% + ${Math.round(yOffset)}px))`;
+        sat.style.opacity = opacity.toFixed(2);
+        sat.style.zIndex = Math.round(35 - absDelta * 10);
+
+        // Highlight spotlight box
+        if (absDelta < 0.35 && opacity > 0.6) {
+          if (!sat.classList.contains('sat-active')) {
+            satellites.forEach(s => s.classList.remove('sat-active'));
             sat.classList.add('sat-active');
-          } else {
-            sat.classList.remove('sat-active');
+          }
+          activeThreadIndices.add(idx);
+        } else {
+          sat.classList.remove('sat-active');
+          if (absDelta >= 0.70) {
+            activeThreadIndices.delete(idx);
           }
         }
+
+        // Store 2D screen coordinate in 1000x1000 normalized space for the wavy thread canvas
+        cardScreenCoords[idx] = {
+          x: ((cx + xOffset) / cw) * 1000,
+          y: ((cy + yOffset) / ch) * 1000
+        };
       });
     }
+
+    // Animation ticker to smooth 3D motion transitions
+    function tickOrbit() {
+      requestAnimationFrame(tickOrbit);
+      const diff = targetOrbitIndex - currentOrbitIndex;
+      if (Math.abs(diff) > 0.0005) {
+        currentOrbitIndex += diff * 0.12;
+      }
+      const traitsSection = document.getElementById('act-traits');
+      if (traitsSection) {
+        const rect = traitsSection.getBoundingClientRect();
+        const totalH = traitsSection.offsetHeight - window.innerHeight;
+        const progress = totalH > 0 ? Math.min(1, Math.max(0, -rect.top / totalH)) : 0;
+        renderTraitsOrbit(progress);
+      }
+    }
+    tickOrbit();
 
     window.addEventListener('scroll', updateScrollMetrics, { passive: true });
     window.addEventListener('resize', updateTraitsHubScroll, { passive: true });
 
-    // IntersectionObserver for active chapters & shape morphs
-    const observerOptions = {
-      root: null,
-      rootMargin: '-20% 0px -40% 0px',
-      threshold: [0.1, 0.4]
-    };
+    // Active Section Tracking (Dual: Topbar Links & Right Rail Dots)
+    function updateActiveSection(sectionId, shapeKey) {
+      if (shapeKey) {
+        switchConstellation(shapeKey);
+      }
+      onActEntered(sectionId, shapeKey);
 
-    const sectionObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.id;
-          const shapeKey = entry.target.getAttribute('data-shape') || 'fox';
-
-          // Trigger 3D constellation shape morph
-          switchConstellation(shapeKey);
-
-          // Update Topbar Chapter Nav
-          navLinks.forEach(link => {
-            if (link.getAttribute('href') === `#${sectionId}`) {
-              link.classList.add('active');
-            } else {
-              link.classList.remove('active');
-            }
-          });
-
-          // Update Quick Rail Dots
-          railDots.forEach(dot => {
-            if (dot.getAttribute('data-target') === sectionId) {
-              dot.classList.add('active');
-            } else {
-              dot.classList.remove('active');
-            }
-          });
+      navLinks.forEach(link => {
+        if (link.getAttribute('href') === `#${sectionId}`) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
         }
       });
-    }, observerOptions);
+      railDots.forEach(dot => {
+        if (dot.getAttribute('data-target') === sectionId) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
 
-    sections.forEach(s => sectionObserver.observe(s));
+    // Scroll-based Section Active Tracker (Robust fallback & accurate mapping across large runways)
+    function checkActiveSectionOnScroll() {
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+
+      // If at bottom of page, always highlight last section (Act 05)
+      if (docH > 0 && scrollY >= docH - 50) {
+        const lastSection = sections[sections.length - 1];
+        if (lastSection) {
+          const shapeKey = lastSection.getAttribute('data-shape') || 'fox';
+          updateActiveSection(lastSection.id, shapeKey);
+          return;
+        }
+      }
+
+      const scrollMiddle = scrollY + window.innerHeight * 0.40;
+      let currentSection = sections[0];
+      sections.forEach(s => {
+        const top = s.offsetTop;
+        const bottom = top + s.offsetHeight;
+        if (scrollMiddle >= top && scrollMiddle < bottom) {
+          currentSection = s;
+        }
+      });
+      if (currentSection) {
+        const shapeKey = currentSection.getAttribute('data-shape') || 'fox';
+        updateActiveSection(currentSection.id, shapeKey);
+      }
+    }
+
+    // Nav Helper: Scroll accurately to destination
+    function scrollToAct(targetId) {
+      const targetEl = document.getElementById(targetId);
+      if (!targetEl) return;
+      const targetTop = targetEl.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({
+        top: Math.round(targetTop),
+        behavior: 'instant'
+      });
+      const shapeKey = targetEl.getAttribute('data-shape') || 'fox';
+      updateActiveSection(targetId, shapeKey);
+    }
 
     // Rail Dot Click Handler
     railDots.forEach(dot => {
-      dot.addEventListener('click', () => {
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
         const targetId = dot.getAttribute('data-target');
-        const targetEl = document.getElementById(targetId);
-        if (targetEl) {
-          targetEl.scrollIntoView({ behavior: 'smooth' });
+        scrollToAct(targetId);
+      });
+    });
+
+    // Topbar Nav Links Click Handler
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          const targetId = href.slice(1);
+          scrollToAct(targetId);
         }
       });
     });
@@ -704,49 +907,36 @@
         const x = (e.clientX - rect.left) / rect.width - 0.5;
         const y = (e.clientY - rect.top) / rect.height - 0.5;
 
-        const tiltX = -y * 14;
-        const tiltY = x * 14;
+        const tiltX = -y * 18;
+        const tiltY = x * 18;
 
-        el.style.transform = `perspective(1000px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) translateY(-4px)`;
+        el.style.transform = `rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) translateZ(10px)`;
       });
 
       el.addEventListener('mouseleave', () => {
-        el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+        el.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px)';
       });
     });
 
-    // 2. Award-Winning Split-Depth Multi-Plane Perspective Stages
+    // 2. 3D Glass Block Parallax Depth Effect
     const splitStages = document.querySelectorAll('[data-split-stage]');
     splitStages.forEach(stage => {
       const wrapper = stage.querySelector('.split-frame-wrapper');
       const deepBg = stage.querySelector('.layer-deep-bg');
-      const leftBar = stage.querySelector('.depth-bar-left');
-      const rightBar = stage.querySelector('.depth-bar-right');
-      const subject = stage.querySelector('.layer-subject-popout');
 
-      if (!wrapper || !deepBg || !subject) return;
+      if (!wrapper || !deepBg) return;
 
       wrapper.addEventListener('mousemove', (e) => {
         const rect = wrapper.getBoundingClientRect();
         const nx = (e.clientX - rect.left) / rect.width - 0.5;
         const ny = (e.clientY - rect.top) / rect.height - 0.5;
 
-        // Plane 1: Deep Background shifts AWAY (Parallax Depth: -22px)
-        deepBg.style.transform = `scale(1.08) translate3d(${(-nx * 24).toFixed(1)}px, ${(-ny * 18).toFixed(1)}px, 0)`;
-
-        // Plane 2: Depth Anchor Bars shift slightly (Mid-plane: 6px)
-        if (leftBar) leftBar.style.transform = `translate3d(${(nx * 6).toFixed(1)}px, 0, 0)`;
-        if (rightBar) rightBar.style.transform = `translate3d(${(nx * 6).toFixed(1)}px, 0, 0)`;
-
-        // Plane 3: Popout Foreground Subject LAPS FORWARD over bars (Foreground Pop: +34px)
-        subject.style.transform = `scale(1.06) translate3d(${(nx * 32).toFixed(1)}px, ${(ny * 22).toFixed(1)}px, 0)`;
+        // Artwork shifts subtly inside the glass block (Parallax Depth: -16px)
+        deepBg.style.transform = `scale(1.04) translate3d(${(-nx * 18).toFixed(1)}px, ${(-ny * 14).toFixed(1)}px, 0)`;
       });
 
       wrapper.addEventListener('mouseleave', () => {
-        deepBg.style.transform = 'scale(1.05) translate3d(0, 0, 0)';
-        if (leftBar) leftBar.style.transform = 'translate3d(0, 0, 0)';
-        if (rightBar) rightBar.style.transform = 'translate3d(0, 0, 0)';
-        subject.style.transform = 'scale(1.02) translate3d(0, 0, 0)';
+        deepBg.style.transform = 'scale(1.0) translate3d(0, 0, 0)';
       });
     });
   }
@@ -754,9 +944,6 @@
   // =========================================================================
   // 5. ANIMATED WAVY THREADS WITH SPARKS & EMBERS FOR ACT 3 HUB & SPOKE
   // =========================================================================
-  let threadSparks = [];
-  const activeThreadIndices = new Set();
-
   function initWavyThreads() {
     const canvas = document.getElementById('traits-threads-canvas');
     if (!canvas) return;
@@ -765,47 +952,41 @@
 
     let time = 0;
 
-    // Spoke target angles corresponding to the 5 satellites (Clockwise from top)
-    // 0: -90° (Top), 1: -18° (Top-Right), 2: +54° (Bottom-Right), 3: +126° (Bottom-Left), 4: +198° (Top-Left)
-    const targets = [
-      { x: 500, y: 165 },
-      { x: 861, y: 405 },
-      { x: 723, y: 807 },
-      { x: 277, y: 807 },
-      { x: 139, y: 405 }
-    ];
-
     function drawThreads() {
       requestAnimationFrame(drawThreads);
       time += 0.028;
 
       ctx.clearRect(0, 0, 1000, 1000);
 
-      // Only draw threads and emit sparks if at least one trait is active
-      if (activeThreadIndices.size === 0) return;
+      // Draw threads to visible satellites and emit energetic sparks
+      const visibleIndices = Array.from(activeThreadIndices);
+      if (visibleIndices.length === 0) return;
 
-      const cx = 500, cy = 500;
+      // Connect threads from the sphere's actual right-shifted position
+      const cx = sphereCenterNormalized.x;
+      const cy = sphereCenterNormalized.y;
 
-      activeThreadIndices.forEach(idx => {
-        const tgt = targets[idx];
+      visibleIndices.forEach(idx => {
+        const tgt = cardScreenCoords[idx];
         if (!tgt) return;
 
         // Draw multiple glowing wavy sine-wave filaments
         const dx = tgt.x - cx;
         const dy = tgt.y - cy;
         const dist = Math.hypot(dx, dy);
-        const normalX = -dy / dist;
-        const normalY = dx / dist;
+        if (dist < 20) return; // Only skip if right at center
+        const normalX = dist > 0 ? -dy / dist : 0;
+        const normalY = dist > 0 ? dx / dist : 1;
 
         // Core thread + glowing outer halo
         [
-          { width: 3.5, alpha: 0.85, col: 'rgba(255, 68, 85, ' },
-          { width: 1.8, alpha: 1.0, col: 'rgba(245, 176, 65, ' }
+          { width: 5.5, alpha: 0.95, col: 'rgba(255, 68, 85, ' },
+          { width: 3.2, alpha: 1.0, col: 'rgba(255, 220, 140, ' }
         ].forEach(layer => {
           ctx.beginPath();
           ctx.lineWidth = layer.width;
 
-          const steps = 36;
+          const steps = 48;
           for (let step = 0; step <= steps; step++) {
             const t = step / steps;
             const baseX = cx + dx * t;
@@ -813,8 +994,8 @@
 
             // Amplitude bows out in the middle (envelope)
             const envelope = Math.sin(t * Math.PI);
-            const wave = Math.sin(t * 14 - time * 3.5 + idx * 1.8) * (14 * envelope)
-                       + Math.cos(t * 8 + time * 2.2) * (6 * envelope);
+            const wave = Math.sin(t * 12 - time * 3.5 + idx * 1.8) * (20 * envelope)
+                       + Math.cos(t * 7 + time * 2.2) * (10 * envelope);
 
             const px = baseX + normalX * wave;
             const py = baseY + normalY * wave;
@@ -824,35 +1005,37 @@
           }
 
           const grad = ctx.createLinearGradient(cx, cy, tgt.x, tgt.y);
-          grad.addColorStop(0, layer.col + '0.2)');
-          grad.addColorStop(0.3, layer.col + (0.9 * layer.alpha) + ')');
-          grad.addColorStop(1, layer.col + (0.95 * layer.alpha) + ')');
+          grad.addColorStop(0, layer.col + '0.5)');
+          grad.addColorStop(0.3, layer.col + (0.95 * layer.alpha) + ')');
+          grad.addColorStop(1, layer.col + (1.0 * layer.alpha) + ')');
 
           ctx.strokeStyle = grad;
-          ctx.shadowBlur = 10;
+          ctx.shadowBlur = 16;
           ctx.shadowColor = '#ff2a44';
           ctx.stroke();
           ctx.shadowBlur = 0;
         });
 
         // Spawn dynamic sparkling embers along the wavy thread
-        if (Math.random() < 0.42) {
-          const t = 0.15 + Math.random() * 0.8;
-          const envelope = Math.sin(t * Math.PI);
-          const wave = Math.sin(t * 14 - time * 3.5 + idx * 1.8) * (14 * envelope);
-          const px = cx + dx * t + normalX * wave;
-          const py = cy + dy * t + normalY * wave;
+        for (let k = 0; k < 3; k++) {
+          if (Math.random() < 0.75) {
+            const t = 0.10 + Math.random() * 0.85;
+            const envelope = Math.sin(t * Math.PI);
+            const wave = Math.sin(t * 12 - time * 3.5 + idx * 1.8) * (20 * envelope);
+            const px = cx + dx * t + normalX * wave;
+            const py = cy + dy * t + normalY * wave;
 
-          threadSparks.push({
-            x: px,
-            y: py,
-            vx: (Math.random() - 0.5) * 1.8 + normalX * (Math.random() - 0.5) * 2.5,
-            vy: (Math.random() - 0.5) * 1.8 - 0.8, // upward ember drift
-            size: 1.2 + Math.random() * 2.4,
-            alpha: 1.0,
-            decay: 0.02 + Math.random() * 0.025,
-            hue: Math.random() > 0.4 ? 'gold' : 'crimson'
-          });
+            threadSparks.push({
+              x: px,
+              y: py,
+              vx: (Math.random() - 0.5) * 2.5 + normalX * (Math.random() - 0.5) * 3.5,
+              vy: (Math.random() - 0.5) * 2.2 - 1.4, // upward ember drift
+              size: 1.6 + Math.random() * 3.0,
+              alpha: 1.0,
+              decay: 0.016 + Math.random() * 0.018,
+              hue: Math.random() > 0.4 ? 'gold' : 'crimson'
+            });
+          }
         }
       });
 
@@ -895,28 +1078,194 @@
         sat.classList.add('sat-active');
 
         activeThreadIndices.add(idx);
-
-        if (window.soundscape) {
-          window.soundscape.playChime(1.1 + idx * 0.15);
-        }
       });
     });
   }
 
   // =========================================================================
-  // 6. 4K CINEMATIC LIGHTBOX
+  // 6. INNER WIREFRAME SPHERE EMBERS & SPARKS CANVAS
+  // =========================================================================
+  function initSphereEmbers() {
+    const canvas = document.getElementById('sphere-embers-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const W = canvas.width, H = canvas.height;
+    const cx = W * 0.5, cy = H * 0.5;
+    const radius = 95; // Stays bounded inside the sphere globe
+
+    const embers = Array.from({ length: 32 }, () => ({
+      x: cx + (Math.random() - 0.5) * radius * 1.4,
+      y: cy + (Math.random() - 0.5) * radius * 1.4,
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: -0.6 - Math.random() * 0.9, // upward ember drift
+      size: 1.8 + Math.random() * 3.2,
+      alpha: 0.6 + Math.random() * 0.4,
+      baseAlpha: 0.8 + Math.random() * 0.2,
+      pulseSpeed: 0.04 + Math.random() * 0.05,
+      phase: Math.random() * Math.PI * 2,
+      hue: Math.random() > 0.35 ? '#f5b041' : '#ff3344'
+    }));
+
+    function drawSphereEmbers() {
+      requestAnimationFrame(drawSphereEmbers);
+      ctx.clearRect(0, 0, W, H);
+
+      embers.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.phase += p.pulseSpeed;
+
+        // Circular containment inside sphere: wrap back with fresh coordinates
+        const d = Math.hypot(p.x - cx, p.y - cy);
+        if (d > radius || p.y < cy - radius) {
+          p.x = cx + (Math.random() - 0.5) * (radius * 1.2);
+          p.y = cy + radius * 0.6 + Math.random() * 15;
+          p.vy = -0.4 - Math.random() * 0.6;
+        }
+
+        const alpha = Math.max(0, p.baseAlpha * (0.6 + 0.4 * Math.sin(p.phase)));
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.hue === '#f5b041'
+          ? `rgba(245, 176, 65, ${alpha})`
+          : `rgba(255, 42, 68, ${alpha})`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.hue;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+    }
+
+    drawSphereEmbers();
+  }
+
+  // =========================================================================
+  // 6b. ACT 2 GLASS BLOCK CINEMATIC EMBERS & SPARKS CANVAS
+  // =========================================================================
+  function initGlassBlockEmbers() {
+    const canvas = document.getElementById('glass-block-embers');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Dynamically match internal resolution to render size for pixel-crisp embers
+    function resizeCanvas() {
+      if (canvas.offsetWidth && canvas.offsetHeight) {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      }
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas, { passive: true });
+
+    // 45 vibrant glowing embers and energetic sparks floating at the forefront of the glass block
+    const blockEmbers = Array.from({ length: 45 }, () => ({
+      x: Math.random() * (canvas.width || 440),
+      y: Math.random() * (canvas.height || 780),
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: -0.9 - Math.random() * 1.6, // energetic upward drift
+      size: 2.4 + Math.random() * 4.2, // prominent, unmistakable embers
+      alpha: 0.7 + Math.random() * 0.3,
+      baseAlpha: 0.9 + Math.random() * 0.1,
+      pulseSpeed: 0.04 + Math.random() * 0.06,
+      phase: Math.random() * Math.PI * 2,
+      sparkType: Math.random() > 0.4 ? 'gold' : 'crimson'
+    }));
+
+    function drawBlockEmbers() {
+      requestAnimationFrame(drawBlockEmbers);
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      blockEmbers.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.phase += p.pulseSpeed;
+
+        if (p.y < -20) {
+          p.y = H + 20;
+          p.x = Math.random() * W;
+          p.vy = -0.9 - Math.random() * 1.6;
+        }
+        if (p.x < -20) p.x = W + 20;
+        if (p.x > W + 20) p.x = -20;
+
+        const currentAlpha = Math.max(0.35, p.baseAlpha * (0.7 + 0.3 * Math.sin(p.phase)));
+
+        // Outer atmospheric glow halo
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = p.sparkType === 'gold'
+          ? `rgba(245, 176, 65, ${currentAlpha * 0.3})`
+          : `rgba(255, 42, 68, ${currentAlpha * 0.3})`;
+        ctx.fill();
+
+        // Core saturated ember body
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        const glowColor = p.sparkType === 'gold' ? '#f5b041' : '#ff2a44';
+        ctx.fillStyle = p.sparkType === 'gold'
+          ? `rgba(255, 230, 150, ${currentAlpha})`
+          : `rgba(255, 80, 100, ${currentAlpha})`;
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = glowColor;
+        ctx.fill();
+
+        // White-hot pinpoint core for maximum cinematic brilliance
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 0.45, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${currentAlpha * 0.95})`;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = '#ffffff';
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+      });
+    }
+
+    drawBlockEmbers();
+  }
+
+  // =========================================================================
+  // 6c. DYNAMIC EXHIBIT NUMBERING
+  // =========================================================================
+  function initDynamicExhibits() {
+    const tiles = Array.from(document.querySelectorAll('.cinematic-tile'));
+    tiles.forEach((tile, idx) => {
+      tile.setAttribute('data-index', idx);
+      const numStr = String(idx + 1).padStart(2, '0');
+
+      // Ensure NO descriptive text or titles exist; only pure dynamic EXHIBIT XX badge
+      let infoEl = tile.querySelector('.tile-info');
+      if (!infoEl) {
+        infoEl = document.createElement('div');
+        infoEl.className = 'tile-info';
+        tile.appendChild(infoEl);
+      }
+      infoEl.innerHTML = `<span class="tile-idx">EXHIBIT ${numStr}</span>`;
+    });
+  }
+
+  // =========================================================================
+  // 7. 4K CINEMATIC LIGHTBOX & DYNAMIC EXHIBIT NUMBERING
   // =========================================================================
   function initLightbox() {
+    initDynamicExhibits();
+
     const modal = document.getElementById('lightbox');
     const lbImg = document.getElementById('lightbox-img');
     const lbIdx = document.getElementById('lightbox-idx');
-    const lbTitle = document.getElementById('lightbox-title');
     const closeBtn = document.querySelector('.lightbox-close');
     const prevBtn = document.querySelector('.lightbox-prev');
     const nextBtn = document.querySelector('.lightbox-next');
     const backdrop = document.querySelector('.lightbox-backdrop');
 
     const tiles = Array.from(document.querySelectorAll('.cinematic-tile'));
+
     let currentIndex = 0;
 
     function openAt(idx) {
@@ -926,12 +1275,11 @@
 
       const tile = tiles[currentIndex];
       const imgSrc = tile.getAttribute('data-img');
-      const idxText = tile.querySelector('.tile-idx')?.textContent || `EXHIBIT ${currentIndex + 1}`;
-      const titleText = tile.querySelector('.tile-title')?.textContent || 'Portrait';
+      const numStr = String(currentIndex + 1).padStart(2, '0');
+      const idxText = `EXHIBIT ${numStr}`;
 
       lbImg.src = imgSrc;
       lbIdx.textContent = idxText;
-      lbTitle.textContent = titleText;
 
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
@@ -967,9 +1315,8 @@
   function initAudioPill() {
     const pill = document.getElementById('audio-pill');
     const label = pill?.querySelector('.audio-label');
-    window.soundscape = new CelestialSoundscape();
 
-    if (pill && label) {
+    if (pill && label && window.soundscape) {
       pill.addEventListener('click', () => {
         const isPlaying = window.soundscape.toggle();
         if (isPlaying) {
@@ -986,15 +1333,24 @@
   // =========================================================================
   // INITIALIZATION ON DOM READY
   // =========================================================================
-  window.addEventListener('DOMContentLoaded', () => {
+  function runInit() {
     initThree();
     animate();
     initScrollytelling();
     init3DTiltAndSplitDepth();
     initWavyThreads();
+    initSphereEmbers();
+    initGlassBlockEmbers();
+    initDynamicExhibits();
     initTraitSelector();
     initLightbox();
     initAudioPill();
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', runInit);
+  } else {
+    runInit();
+  }
 
 })();
