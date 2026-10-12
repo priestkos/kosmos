@@ -1332,6 +1332,9 @@
     const label = pill?.querySelector('.audio-label');
 
     if (pill && label && window.soundscape) {
+      // Build the audio graph on load so the drone starts as soon as the browser
+      // allows audio (init() also arms a first-gesture resume listener).
+      window.soundscape.init();
       // Sync initial state (sound on by default)
       if (window.soundscape.isPlaying) {
         pill.classList.add('playing');
