@@ -612,6 +612,10 @@
   let threadSparks = [];
   const activeThreadIndices = new Set();
 
+  // Phones / short landscape screens: Act 3 renders as a plain stacked list
+  // (see the matching media query in style.css), so the pinned carousel is skipped.
+  const traitsStackedMQ = window.matchMedia('(max-width: 900px), (max-height: 560px)');
+
   // =========================================================================
   // 3. SCROLLYTELLING CONTROLLER & SECTION INTERSECTION OBSERVER
   // =========================================================================
@@ -719,6 +723,17 @@
     function renderTraitsOrbit(progress) {
       const satellites = document.querySelectorAll('.trait-satellite');
       if (!satellites || satellites.length === 0) return;
+
+      if (traitsStackedMQ.matches) {
+        activeThreadIndices.clear();
+        satellites.forEach(sat => {
+          if (sat.style.transform || sat.style.opacity) {
+            sat.removeAttribute('style');
+            sat.classList.remove('sat-active');
+          }
+        });
+        return;
+      }
 
       const container = document.querySelector('.traits-hub-container');
       const cw = container ? container.clientWidth : 1000;
@@ -1315,6 +1330,23 @@
     if (backdrop) backdrop.addEventListener('click', close);
     if (prevBtn) prevBtn.addEventListener('click', () => openAt(currentIndex - 1));
     if (nextBtn) nextBtn.addEventListener('click', () => openAt(currentIndex + 1));
+
+    // Touch swipe: left/right to change image, on phones and tablets
+    let touchX = null, touchY = null;
+    modal.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      touchX = e.touches[0].clientX;
+      touchY = e.touches[0].clientY;
+    }, { passive: true });
+    modal.addEventListener('touchend', (e) => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      const dy = e.changedTouches[0].clientY - touchY;
+      touchX = touchY = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        openAt(currentIndex + (dx < 0 ? 1 : -1));
+      }
+    }, { passive: true });
 
     document.addEventListener('keydown', (e) => {
       if (!modal.classList.contains('open')) return;
