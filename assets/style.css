@@ -114,6 +114,33 @@ body {
    AUDIO PILL CONTROLLER
    ========================================================================= */
 
+.sound-announcement {
+  position: fixed;
+  left: 32px;
+  bottom: 84px;
+  z-index: 100;
+  margin: 0;
+  max-width: 240px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(14, 17, 26, 0.92);
+  border: 1px solid var(--border-subtle);
+  color: var(--foxfire-gold);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.sound-announcement.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .audio-pill {
   position: fixed;
   bottom: 28px;
@@ -131,12 +158,22 @@ body {
   pointer-events: auto;
   transition: all 0.3s ease;
   user-select: none;
+  font: inherit;
+  color: inherit;
+  appearance: none;
 }
 
 .audio-pill:hover {
   border-color: var(--foxfire-gold);
   box-shadow: 0 0 16px var(--gold-glow);
   transform: translateY(-2px);
+}
+
+.audio-pill:focus-visible,
+.lightbox-close:focus-visible,
+.lightbox-nav:focus-visible {
+  outline: 2px solid var(--foxfire-gold);
+  outline-offset: 3px;
 }
 
 .audio-waves {
@@ -169,6 +206,54 @@ body {
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+}
+
+.nav-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.find-her-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 26px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--crimson), #c81e36);
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 0 24px var(--crimson-glow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.find-her-link:hover {
+  transform: translateY(-2px);
+  color: #fff;
+  box-shadow: 0 0 32px var(--crimson-glow);
+}
+
+.find-her-link:focus-visible {
+  outline: 2px solid var(--foxfire-gold);
+  outline-offset: 3px;
+}
+
+.nav-meta .find-her-link {
+  padding: 10px 16px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.hero-find-her {
+  margin-top: 28px;
+  position: relative;
+  z-index: 5;
 }
 
 /* =========================================================================
@@ -640,7 +725,7 @@ body {
 }
 
 .hero-scroll-cue {
-  margin-top: 56px;
+  margin-top: 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1511,6 +1596,14 @@ body {
 
 .gallery-tile {
   position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  appearance: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   aspect-ratio: 3/4;
   border-radius: 12px;
   overflow: hidden;
@@ -1518,6 +1611,11 @@ body {
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.gallery-tile:focus-visible {
+  outline: 2px solid var(--foxfire-gold);
+  outline-offset: 3px;
 }
 
 .tile-inner {
@@ -1816,6 +1914,10 @@ body {
   .nav-chapters {
     display: none;
   }
+  .nav-meta .find-her-link {
+    padding: 8px 12px;
+    font-size: 0.68rem;
+  }
   .split-story-grid {
     grid-template-columns: 1fr;
     gap: 48px;
@@ -1879,13 +1981,19 @@ body {
     right: 4px;
     gap: 10px;
   }
+  .sound-announcement {
+    left: 12px;
+    bottom: 64px;
+  }
   .audio-pill {
     left: 12px;
     bottom: 12px;
-    padding: 9px 11px;
+    padding: 9px 12px;
   }
-  .audio-label {
-    display: none;
+  .nav-meta .find-her-link,
+  .hero-find-her {
+    padding: 10px 14px;
+    font-size: 0.72rem;
   }
   .lightbox-container {
     max-width: 100vw;

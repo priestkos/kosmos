@@ -18,12 +18,13 @@
 <body>
 
   <!-- Ambient Audio Soundscape (Web Audio API Synthesizer) -->
-  <div id="audio-pill" class="audio-pill playing" title="Toggle Celestial Soundscape">
-    <div class="audio-waves" aria-hidden="true">
+  <p id="sound-announcement" class="sound-announcement" role="status" aria-live="polite"></p>
+  <button type="button" id="audio-pill" class="audio-pill" aria-pressed="false" aria-label="Turn sound on">
+    <span class="audio-waves" aria-hidden="true">
       <span></span><span></span><span></span><span></span>
-    </div>
-    <span class="audio-label">SOUND: ON</span>
-  </div>
+    </span>
+    <span class="audio-label">SOUND: OFF</span>
+  </button>
 
   <!-- Background WebGL 3D Constellation Canvas -->
   <div id="webgl-stage" aria-hidden="true">
@@ -59,6 +60,7 @@
     </nav>
 
     <div class="nav-meta">
+      <a href="#act-sanctuaries" class="find-her-link">Find her in game</a>
     </div>
   </header>
 
@@ -108,6 +110,8 @@
             </div>
           </div>
         </div>
+
+        <a href="#act-sanctuaries" class="find-her-link hero-find-her">Find her in game</a>
 
         <div class="hero-scroll-cue">
           <div class="cue-mouse">
@@ -297,60 +301,60 @@
 
         <div class="gallery-grid">
           <!-- Dynamically Numbered Exhibit Tiles -->
-          <div class="gallery-tile" data-img="assets/images/1.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/1.jpg" aria-label="Open exhibit 01">
             <div class="tile-inner" style="background-image: url('assets/images/1.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/2.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/2.jpg" aria-label="Open exhibit 02">
             <div class="tile-inner" style="background-image: url('assets/images/2.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/3.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/3.jpg" aria-label="Open exhibit 03">
             <div class="tile-inner" style="background-image: url('assets/images/3.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/4.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/4.jpg" aria-label="Open exhibit 04">
             <div class="tile-inner" style="background-image: url('assets/images/4.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/5.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/5.jpg" aria-label="Open exhibit 05">
             <div class="tile-inner" style="background-image: url('assets/images/5.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/6.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/6.jpg" aria-label="Open exhibit 06">
             <div class="tile-inner" style="background-image: url('assets/images/6.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/7.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/7.jpg" aria-label="Open exhibit 07">
             <div class="tile-inner" style="background-image: url('assets/images/7.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/8.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/8.jpg" aria-label="Open exhibit 08">
             <div class="tile-inner" style="background-image: url('assets/images/8.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/10.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/10.jpg" aria-label="Open exhibit 09">
             <div class="tile-inner" style="background-image: url('assets/images/10.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/11.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/11.jpg" aria-label="Open exhibit 10">
             <div class="tile-inner" style="background-image: url('assets/images/11.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
-          <div class="gallery-tile" data-img="assets/images/12.jpg">
+          <button type="button" class="gallery-tile" data-img="assets/images/12.jpg" aria-label="Open exhibit 11">
             <div class="tile-inner" style="background-image: url('assets/images/12.jpg');"></div>
             <div class="tile-depth-glow"></div>
-          </div>
+          </button>
 
         </div>
       </div>
@@ -414,15 +418,15 @@
   <div id="lightbox" class="lightbox-modal" role="dialog" aria-modal="true" aria-label="Image Viewer">
     <div class="lightbox-backdrop"></div>
     <div class="lightbox-container">
-      <button class="lightbox-close" aria-label="Close Viewer">&times;</button>
-      <button class="lightbox-nav lightbox-prev" aria-label="Previous">&lsaquo;</button>
+      <button type="button" class="lightbox-close" aria-label="Close exhibit"><span aria-hidden="true">&times;</span></button>
+      <button type="button" class="lightbox-nav lightbox-prev" aria-label="Previous exhibit"><span aria-hidden="true">&lsaquo;</span></button>
       <div class="lightbox-content">
         <img id="lightbox-img" src="" alt="High resolution portrait">
         <div class="lightbox-caption">
           <span id="lightbox-idx"></span>
         </div>
       </div>
-      <button class="lightbox-nav lightbox-next" aria-label="Next">&rsaquo;</button>
+      <button type="button" class="lightbox-nav lightbox-next" aria-label="Next exhibit"><span aria-hidden="true">&rsaquo;</span></button>
     </div>
   </div>
 

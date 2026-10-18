@@ -17,7 +17,7 @@
   class CelestialSoundscape {
     constructor() {
       this.ctx = null;
-      this.isPlaying = true;
+      this.isPlaying = false;
       this.masterGain = null;
       this.oscillators = [];
       this.filter = null;
@@ -31,7 +31,7 @@
 
       // Master output gain for ambient continuous drone chords
       this.masterGain = this.ctx.createGain();
-      // Start with volume at active level since sound is on by default
+      // Sound stays silent until the visitor turns it on.
       const initialGain = this.isPlaying ? 0.35 : 0;
       this.masterGain.gain.setValueAtTime(initialGain, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
@@ -621,7 +621,7 @@
   // =========================================================================
   function initScrollytelling() {
     const sections = document.querySelectorAll('.story-section');
-    const navLinks = document.querySelectorAll('.chapter-link');
+    const navLinks = document.querySelectorAll('.chapter-link, .find-her-link');
     const railDots = document.querySelectorAll('.rail-dot');
     const progressBar = document.getElementById('scroll-progress-line');
 
@@ -1268,6 +1268,7 @@
     tiles.forEach((tile, idx) => {
       tile.setAttribute('data-index', idx);
       const numStr = String(idx + 1).padStart(2, '0');
+      tile.setAttribute('aria-label', `Open exhibit ${numStr}`);
 
       // Ensure NO descriptive text or titles exist; only pure dynamic EXHIBIT XX badge
       let infoEl = tile.querySelector('.tile-info');
@@ -1326,10 +1327,19 @@
       tile.addEventListener('click', () => openAt(idx));
     });
 
-    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (closeBtn) {
+      closeBtn.setAttribute('aria-label', 'Close exhibit');
+      closeBtn.addEventListener('click', close);
+    }
     if (backdrop) backdrop.addEventListener('click', close);
-    if (prevBtn) prevBtn.addEventListener('click', () => openAt(currentIndex - 1));
-    if (nextBtn) nextBtn.addEventListener('click', () => openAt(currentIndex + 1));
+    if (prevBtn) {
+      prevBtn.setAttribute('aria-label', 'Previous exhibit');
+      prevBtn.addEventListener('click', () => openAt(currentIndex - 1));
+    }
+    if (nextBtn) {
+      nextBtn.setAttribute('aria-label', 'Next exhibit');
+      nextBtn.addEventListener('click', () => openAt(currentIndex + 1));
+    }
 
     // Touch swipe: left/right to change image, on phones and tablets
     let touchX = null, touchY = null;
@@ -1359,34 +1369,54 @@
   // =========================================================================
   // 7. AMBIENT AUDIO PILL TRIGGER
   // =========================================================================
+  function syncAudioControl(pill, label, isPlaying) {
+    pill.classList.toggle('playing', isPlaying);
+    pill.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+    pill.setAttribute('aria-label', isPlaying ? 'Turn sound off' : 'Turn sound on');
+    if (label) label.textContent = isPlaying ? 'SOUND: ON' : 'SOUND: OFF';
+  }
+
+  function initSoundAnnouncement(pill) {
+    const note = document.getElementById('sound-announcement');
+    if (!note) return;
+
+    note.setAttribute('aria-hidden', 'true');
+
+    const reveal = () => {
+      note.textContent = 'Sound is available';
+      note.setAttribute('aria-hidden', 'false');
+      note.classList.add('is-visible');
+    };
+    const conceal = () => {
+      note.classList.remove('is-visible');
+      window.setTimeout(() => note.setAttribute('aria-hidden', 'true'), 800);
+    };
+
+    const showTimer = window.setTimeout(reveal, 700);
+    const hideTimer = window.setTimeout(conceal, 8700);
+
+    pill?.addEventListener('click', () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+      conceal();
+    }, { once: true });
+  }
+
   function initAudioPill() {
     const pill = document.getElementById('audio-pill');
     const label = pill?.querySelector('.audio-label');
 
     if (pill && label && window.soundscape) {
-      // Build the audio graph on load so the drone starts as soon as the browser
-      // allows audio (init() also arms a first-gesture resume listener).
-      window.soundscape.init();
-      // Sync initial state (sound on by default)
-      if (window.soundscape.isPlaying) {
-        pill.classList.add('playing');
-        label.textContent = 'SOUND: ON';
-      } else {
-        pill.classList.remove('playing');
-        label.textContent = 'SOUND: OFF';
-      }
+      // Leave the audio graph unstarted so nothing plays until the visitor opts in.
+      syncAudioControl(pill, label, window.soundscape.isPlaying);
 
       pill.addEventListener('click', () => {
         const isPlaying = window.soundscape.toggle();
-        if (isPlaying) {
-          pill.classList.add('playing');
-          label.textContent = 'SOUND: ON';
-        } else {
-          pill.classList.remove('playing');
-          label.textContent = 'SOUND: OFF';
-        }
+        syncAudioControl(pill, label, isPlaying);
       });
     }
+
+    initSoundAnnouncement(pill);
   }
 
   // =========================================================================
