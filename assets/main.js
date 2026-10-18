@@ -1461,42 +1461,105 @@
       });
     };
 
+    const focusWithRing = (el) => {
+      el.focus({ focusVisible: true });
+    };
+
+    let trapOn = false;
+
+    const onKeydown = (event) => {
+      if (!trapOn || event.key !== 'Tab') return;
+      const active = document.activeElement;
+      const inside = gate.contains(active);
+      if (event.shiftKey) {
+        if (!inside || active === enterBtn) {
+          event.preventDefault();
+          focusWithRing(leaveBtn);
+        }
+      } else if (!inside || active === leaveBtn) {
+        event.preventDefault();
+        focusWithRing(enterBtn);
+      }
+    };
+
+    const pullFocusBack = () => {
+      window.setTimeout(() => {
+        if (!trapOn) return;
+        if (gate.contains(document.activeElement)) return;
+        focusWithRing(enterBtn);
+      }, 0);
+    };
+
+    const onFocusIn = (event) => {
+      if (!trapOn) return;
+      if (event.target === gate || gate.contains(event.target)) return;
+      pullFocusBack();
+    };
+
+    const onFocusOut = (event) => {
+      if (!trapOn) return;
+      if (!gate.contains(event.target)) return;
+      pullFocusBack();
+    };
+
+    const armTrap = () => {
+      if (trapOn) return;
+      trapOn = true;
+      document.addEventListener('keydown', onKeydown);
+      document.addEventListener('focusin', onFocusIn);
+      document.addEventListener('focusout', onFocusOut);
+    };
+
+    const disarmTrap = () => {
+      trapOn = false;
+      document.removeEventListener('keydown', onKeydown);
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+    };
+
+    const placeInitialFocus = () => {
+      if (!trapOn) return;
+      const active = document.activeElement;
+      if (active === enterBtn || active === leaveBtn) return;
+      focusWithRing(enterBtn);
+    };
+
+    const restorePageFocus = () => {
+      const controls = document.querySelectorAll('.site-nav a, .site-nav button');
+      for (const el of controls) {
+        if (el.getClientRects().length === 0) continue;
+        focusWithRing(el);
+        if (document.activeElement === el) return;
+      }
+      const main = document.querySelector('main');
+      if (main) {
+        main.setAttribute('tabindex', '-1');
+        main.focus();
+      }
+    };
+
     if (document.documentElement.classList.contains('age-ok')) {
       gate.hidden = true;
+      enterBtn.removeAttribute('autofocus');
       releasePage();
       initSoundAnnouncement(pill);
       return;
     }
 
     lockPage();
-    enterBtn.focus();
-
-    const buttons = [enterBtn, leaveBtn];
-    gate.addEventListener('keydown', (event) => {
-      if (event.key !== 'Tab') return;
-      const active = document.activeElement;
-      const first = buttons[0];
-      const last = buttons[buttons.length - 1];
-      if (event.shiftKey && active === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    });
+    armTrap();
+    focusWithRing(enterBtn);
+    requestAnimationFrame(placeInitialFocus);
+    window.addEventListener('load', placeInitialFocus);
 
     enterBtn.addEventListener('click', () => {
       try { localStorage.setItem('kosmos-age-ok', '1'); } catch (e) {}
       document.documentElement.classList.add('age-ok');
+      disarmTrap();
       gate.hidden = true;
       releasePage();
       initSoundAnnouncement(pill);
-      const main = document.querySelector('main');
-      if (main) {
-        main.setAttribute('tabindex', '-1');
-        main.focus();
-      }
+      restorePageFocus();
     });
 
     leaveBtn.addEventListener('click', () => {

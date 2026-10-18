@@ -22,6 +22,10 @@
   --text-muted: #d7e0ec;
   --text-dim: #c5d0e0;
   --text-bright: #f1f5f9;
+  /* Small all-caps labels stay at least 14px, above the 13px floor. */
+  --mono-label: 0.875rem;
+  --label-gold: #ffe3a8;
+  --label-ink: #eef3f8;
 
   --font-atkinson: 'Atkinson Hyperlegible', sans-serif;
   --font-serif: 'Cinzel', serif;
@@ -158,7 +162,7 @@ body {
   backdrop-filter: blur(12px);
   cursor: pointer;
   pointer-events: auto;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   user-select: none;
   font: inherit;
   color: inherit;
@@ -205,9 +209,9 @@ body {
 
 .audio-label {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: var(--mono-label);
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: var(--label-ink);
 }
 
 .nav-meta {
@@ -291,16 +295,21 @@ html.age-ok .age-gate {
   text-align: left;
 }
 
+.age-gate-card.glass-panel {
+  overflow: visible;
+}
+
 .age-gate-card .brand-crest {
   margin-bottom: 22px;
 }
 
 .age-gate-kicker {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: 1rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #ffc56a;
+  color: var(--label-gold);
   margin-bottom: 12px;
 }
 
@@ -314,9 +323,10 @@ html.age-ok .age-gate {
 }
 
 .age-gate-copy {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: var(--text-muted);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.65;
+  color: #f7f8fb;
   max-width: 40ch;
 }
 
@@ -355,10 +365,10 @@ html.age-ok .age-gate {
   color: #fff;
 }
 
-.age-leave:focus-visible,
-.age-gate .find-her-link:focus-visible {
-  outline: 2px solid var(--foxfire-gold);
-  outline-offset: 3px;
+.age-leave:focus,
+.age-gate .find-her-link:focus {
+  outline: 3px solid #fff8ea;
+  outline-offset: 4px;
 }
 
 /* =========================================================================
@@ -424,9 +434,9 @@ html.age-ok .age-gate {
 
 .brand-sub {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
-  color: var(--foxfire-gold);
+  font-size: var(--mono-label);
+  letter-spacing: 0.12em;
+  color: var(--label-gold);
 }
 
 .nav-chapters {
@@ -438,21 +448,25 @@ html.age-ok .age-gate {
 .chapter-link {
   text-decoration: none;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
+  font-size: var(--mono-label);
+  letter-spacing: 0.08em;
+  color: var(--label-ink);
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
   border-radius: 6px;
-  transition: all 0.25s ease;
+  transition: color 0.25s ease, background-color 0.25s ease;
+}
+
+.chapter-link:focus-visible {
+  outline: 2px solid var(--label-gold);
+  outline-offset: 3px;
 }
 
 .ch-num {
-  color: var(--foxfire-gold);
+  color: var(--label-gold);
   font-weight: 600;
-  opacity: 0.7;
 }
 
 .chapter-link:hover, .chapter-link.active {
@@ -510,11 +524,11 @@ html.age-ok .age-gate {
   flex-direction: column;
   gap: 4px;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  background: rgba(14, 17, 26, 0.75);
+  font-size: var(--mono-label);
+  background: #0c1018;
   padding: 10px 16px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(8px);
 }
 
@@ -526,7 +540,7 @@ html.age-ok .age-gate {
 }
 
 .hud-lbl {
-  color: var(--text-dim);
+  color: var(--label-ink);
 }
 
 .hud-val {
@@ -534,7 +548,7 @@ html.age-ok .age-gate {
 }
 
 .accent-val {
-  color: var(--foxfire-gold);
+  color: var(--label-gold);
   font-weight: 600;
 }
 
@@ -818,9 +832,9 @@ html.age-ok .age-gate {
 
 .spec-label {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: var(--mono-label);
   letter-spacing: 0.08em;
-  color: var(--text-dim);
+  color: var(--label-ink);
 }
 
 .spec-data {
@@ -1526,20 +1540,20 @@ html.age-ok .age-gate {
 
 .sat-badge {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: var(--mono-label);
   font-weight: 700;
-  color: var(--crimson);
-  background: rgba(255, 42, 68, 0.14);
+  color: #ffd0d6;
+  background: #3a1020;
   padding: 2px 8px;
   border-radius: 4px;
-  border: 1px solid rgba(255, 42, 68, 0.25);
+  border: 1px solid rgba(255, 42, 68, 0.45);
 }
 
 .sat-label {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: var(--mono-label);
   letter-spacing: 0.08em;
-  color: var(--text-dim);
+  color: var(--label-ink);
 }
 
 .sat-name {
@@ -1564,15 +1578,15 @@ html.age-ok .age-gate {
 
 .sat-subline {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  letter-spacing: 0.08em;
-  color: #ffc56a;
+  font-size: var(--mono-label);
+  letter-spacing: 0.06em;
+  color: var(--label-gold);
   text-transform: uppercase;
   font-weight: 500;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   white-space: normal;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 /* Exact Hub-and-Spoke Radial Coordinates (Clockwise, 5 Spoke Symmetry)
@@ -1706,10 +1720,14 @@ html.age-ok .age-gate {
 
 .tile-idx {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  color: var(--foxfire-gold);
+  font-size: var(--mono-label);
+  letter-spacing: 0.08em;
+  color: var(--label-gold);
   font-weight: 600;
+  align-self: flex-start;
+  background: #07080c;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .gallery-tile:hover {
@@ -1883,9 +1901,9 @@ html.age-ok .age-gate {
 
 .venue-decor {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: var(--mono-label);
   letter-spacing: 0.08em;
-  color: #ffc56a;
+  color: var(--label-gold);
   margin-bottom: 12px;
 }
 
