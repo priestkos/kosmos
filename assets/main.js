@@ -1,5 +1,5 @@
 /**
- * K'OS MOS CINEMATIC CONTROLLER & 3D ENGINE
+ * K'OS MOS CONTROLLER & 3D ENGINE
  * - WebGL 3D Parametric Constellation (Three.js) morphing across scroll stages:
  *   [Kitsune Sigil -> Celestial Harp -> Nine Tails Fan -> Starlight Prism -> Cosmic Vortex]
  * - Multi-Plane Split Depth & 3D Tilt Parallax Tracking
@@ -1173,7 +1173,7 @@
   }
 
   // =========================================================================
-  // 6b. ACT 2 GLASS BLOCK CINEMATIC EMBERS & SPARKS CANVAS
+  // 6b. ACT 2 GLASS BLOCK EMBERS & SPARKS CANVAS
   // =========================================================================
   function initGlassBlockEmbers() {
     const canvas = document.getElementById('glass-block-embers');
@@ -1245,7 +1245,7 @@
         ctx.shadowColor = glowColor;
         ctx.fill();
 
-        // White-hot pinpoint core for maximum cinematic brilliance
+        // White-hot pinpoint core for maximum brilliance
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size * 0.45, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${currentAlpha * 0.95})`;
@@ -1264,7 +1264,7 @@
   // 6c. DYNAMIC EXHIBIT NUMBERING
   // =========================================================================
   function initDynamicExhibits() {
-    const tiles = Array.from(document.querySelectorAll('.cinematic-tile'));
+    const tiles = Array.from(document.querySelectorAll('.gallery-tile'));
     tiles.forEach((tile, idx) => {
       tile.setAttribute('data-index', idx);
       const numStr = String(idx + 1).padStart(2, '0');
@@ -1281,7 +1281,7 @@
   }
 
   // =========================================================================
-  // 7. 4K CINEMATIC LIGHTBOX & DYNAMIC EXHIBIT NUMBERING
+  // 7. 4K LIGHTBOX & DYNAMIC EXHIBIT NUMBERING
   // =========================================================================
   function initLightbox() {
     initDynamicExhibits();
@@ -1294,7 +1294,7 @@
     const nextBtn = document.querySelector('.lightbox-next');
     const backdrop = document.querySelector('.lightbox-backdrop');
 
-    const tiles = Array.from(document.querySelectorAll('.cinematic-tile'));
+    const tiles = Array.from(document.querySelectorAll('.gallery-tile'));
 
     let currentIndex = 0;
 
