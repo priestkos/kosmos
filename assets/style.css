@@ -9,7 +9,7 @@
 :root {
   --bg-deep: #07080c;
   --bg-surface: #0e111a;
-  --bg-card: rgba(16, 20, 32, 0.72);
+  --bg-card: rgba(8, 11, 18, 0.96);
   --border-subtle: rgba(245, 176, 65, 0.16);
   --border-bright: rgba(255, 68, 85, 0.45);
   
@@ -19,8 +19,8 @@
   --gold-glow: rgba(245, 176, 65, 0.45);
   --amber-core: #e07a3c;
   --silver-mist: #e2e8f0;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-muted: #d7e0ec;
+  --text-dim: #c5d0e0;
   --text-bright: #f1f5f9;
 
   --font-atkinson: 'Atkinson Hyperlegible', sans-serif;
@@ -45,6 +45,7 @@ html {
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
+  scroll-padding-top: 104px;
 }
 
 body {
@@ -66,6 +67,7 @@ body {
   height: 100%;
   z-index: 1;
   pointer-events: none;
+  opacity: 0.42;
 }
 
 #webgl-canvas {
@@ -270,8 +272,12 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 22px 48px;
-  background: linear-gradient(180deg, rgba(7, 8, 12, 0.85) 0%, rgba(7, 8, 12, 0) 100%);
-  backdrop-filter: blur(6px);
+  background: #07080c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nav-menu-btn {
+  display: none;
 }
 
 .nav-brand {
@@ -497,9 +503,9 @@ body {
 }
 
 .story-section.act-traits {
-  min-height: 650vh;
-  padding: 0;
-  display: block;
+  min-height: auto;
+  padding: 120px 48px;
+  display: flex;
   background: transparent;
 }
 
@@ -511,9 +517,9 @@ body {
 
 .chapter-tag {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  color: var(--foxfire-gold);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  color: #ffc56a;
   margin-bottom: 12px;
   display: inline-flex;
   align-items: center;
@@ -552,10 +558,18 @@ body {
   max-width: 640px;
 }
 
+.scrolly-card p,
+.venue-desc,
+.caption-desc {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
@@ -701,8 +715,8 @@ body {
 
 .spec-label {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
   color: var(--text-dim);
 }
 
@@ -771,9 +785,9 @@ body {
 
 .cue-text {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  color: var(--text-bright);
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
   font-weight: 500;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
@@ -813,9 +827,9 @@ body {
 
 .panel-title {
   font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.15em;
-  color: var(--foxfire-gold);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  color: #ffc56a;
   font-weight: 600;
 }
 
@@ -827,7 +841,7 @@ body {
   font-style: italic;
   font-size: 1.05rem;
   color: #fff;
-  line-height: 1.6;
+  line-height: 1.75;
 }
 
 .dossier-matrix {
@@ -852,13 +866,13 @@ body {
 
 .matrix-key {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
   color: var(--text-dim);
 }
 
 .matrix-val {
-  font-size: 0.92rem;
+  font-size: 1rem;
   color: #f1f5f9;
   font-weight: 500;
   text-align: right;
@@ -1140,9 +1154,9 @@ body {
 }
 
 .caption-desc {
-  font-size: 0.92rem;
+  font-size: 1rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 /* =========================================================================
@@ -1151,60 +1165,41 @@ body {
 
 .act-traits {
   position: relative;
-  min-height: 650vh !important; /* Extended leisurely scroll runway for reading the five traits */
-  padding: 0 !important;
-  display: block !important;
+  min-height: auto;
+  padding: 120px 48px 80px;
+  display: flex;
 }
 
 .traits-pinned-stage {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 130px;
-  left: 0;
+  position: static;
   width: 100%;
-  height: calc(100vh - 145px);
+  height: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   overflow: visible;
-  pointer-events: none;
-  z-index: 40; /* Elevated above background stage and vignette */
+  z-index: 40;
 }
 
 .traits-hub-container {
   position: relative;
-  width: min(94vw, 1340px);
-  height: min(74vh, 700px);
+  width: min(100%, 760px);
+  height: auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 28px;
   pointer-events: auto;
-  perspective: 1200px;
-  perspective-origin: 50% 50%;
 }
 
 /* Canvas for dynamic wavy threads with sparks & embers */
 .traits-threads-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 10;
+  display: none;
 }
 
 /* Background Compass Orbit Rings & Spoke Lines */
 .traits-orbit-svg {
-  position: absolute;
-  top: 50%;
-  left: 7%;
-  width: 1000px;
-  height: 1000px;
-  pointer-events: none;
-  z-index: 1;
-  transform: translate(-50%, -50%) rotateX(28deg) rotateY(-18deg);
-  opacity: 0.65;
-  transition: opacity 0.2s ease;
+  display: none;
 }
 
 .orbit-ring {
@@ -1254,11 +1249,11 @@ body {
 
 /* Central 3D Celestial Sphere: Wireframe Orb with Inner Embers */
 .traits-sphere-globe {
-  position: absolute;
-  top: 50%;
-  left: 7%;
-  transform: translate(-50%, -50%);
-  z-index: 10; /* Cards passing in front have z-index 25-40 */
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1393,16 +1388,14 @@ body {
 
 /* Satellites positioned along angled 3D carousel */
 .trait-satellite {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+  position: relative;
+  top: auto;
+  left: auto;
   z-index: 25;
-  width: clamp(300px, 28vw, 380px);
-  pointer-events: none;
-  opacity: 0;
-  will-change: transform, opacity;
-  transform: translate(-50%, -50%);
-  transition: opacity 0.25s ease;
+  width: 100%;
+  pointer-events: auto;
+  opacity: 1;
+  transform: none;
 }
 
 .trait-satellite.sat-active .sat-inner {
@@ -1441,8 +1434,8 @@ body {
 
 .sat-label {
   font-family: var(--font-mono);
-  font-size: 0.64rem;
-  letter-spacing: 0.18em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
   color: var(--text-dim);
 }
 
@@ -1458,19 +1451,19 @@ body {
 .sat-quote {
   font-family: var(--font-sans);
   font-style: italic;
-  font-size: 0.94rem;
+  font-size: 1rem;
   font-weight: 400;
-  line-height: 1.6;
-  color: #ffffff;
+  line-height: 1.75;
+  color: #f4f7fb;
   margin: 0 0 10px 0;
   display: block;
 }
 
 .sat-subline {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  color: var(--foxfire-gold);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  color: #ffc56a;
   text-transform: uppercase;
   font-weight: 500;
   padding-top: 8px;
@@ -1487,58 +1480,18 @@ body {
    Angle 4: +198° (Top-Left ~9:30 o'clock)
 */
 
-/* 3D Angled Path Positioning (Controlled dynamically by JS) */
 .sat-0, .sat-1, .sat-2, .sat-3, .sat-4 {
-  top: 50%;
-  left: 50%;
+  top: auto;
+  left: auto;
 }
 
-/* Mobile, small tablet & short landscape screens: the pinned carousel becomes a
-   plain stacked list. Keep this query in sync with traitsStackedMQ in main.js.
-   !important is needed to beat the desktop .act-traits runway rules above. */
-@media (max-width: 900px), (max-height: 560px) {
+@media (max-width: 900px) {
   .act-traits {
-    min-height: auto !important;
-    padding: 100px 20px 60px !important;
-  }
-  .traits-pinned-stage {
-    position: static;
-    top: auto;
-    height: auto;
-    width: 100%;
-    overflow: visible;
-  }
-  .traits-hub-container {
-    height: auto;
-    width: 100%;
-    flex-direction: column;
-    gap: 24px;
-    perspective: none;
-  }
-  .traits-orbit-svg,
-  .traits-threads-canvas {
-    display: none;
+    padding: 100px 20px 60px;
   }
   .traits-sphere-globe {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
     width: 160px;
     height: 160px;
-    flex-shrink: 0;
-    margin-bottom: 8px;
-    opacity: 1 !important;
-  }
-  .trait-satellite {
-    position: relative;
-    top: auto !important;
-    left: auto !important;
-    width: 100%;
-    max-width: 520px;
-    opacity: 1 !important;
-    transform: none !important;
-    pointer-events: auto !important;
   }
 }
 
@@ -1547,7 +1500,6 @@ body {
    ========================================================================= */
 
 .act-gallery {
-  scroll-margin-top: 80px;
   padding-top: 140px !important;
 }
 
@@ -1820,17 +1772,17 @@ body {
   color: inherit;
   display: flex;
   flex-direction: column;
-  background: rgba(14, 18, 28, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(8, 11, 18, 0.96);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .venue-decor {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.2em;
-  color: var(--foxfire-gold);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  color: #ffc56a;
   margin-bottom: 12px;
 }
 
@@ -1845,7 +1797,7 @@ body {
 .venue-desc {
   font-size: 1rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.7;
   margin-bottom: 28px;
   flex-grow: 1;
 }
@@ -1854,12 +1806,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
   padding-top: 18px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.15em;
-  color: var(--crimson);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: #ff8b9a;
   font-weight: 600;
   transition: color 0.2s ease;
 }
@@ -1909,14 +1863,104 @@ body {
 
 @media (max-width: 1080px) {
   .site-nav {
-    padding: 16px 24px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: #07080c;
+  }
+  .nav-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: #12151e;
+    color: #f4f7fb;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .nav-menu-btn:focus-visible {
+    outline: 2px solid var(--foxfire-gold);
+    outline-offset: 3px;
   }
   .nav-chapters {
     display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 8px 16px 16px;
+    background: #07080c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
-  .nav-meta .find-her-link {
-    padding: 8px 12px;
-    font-size: 0.68rem;
+  .site-nav.menu-open .nav-chapters {
+    display: flex;
+  }
+  .chapter-link {
+    min-height: 44px;
+    font-size: 1rem;
+    color: #e8eef6;
+  }
+  .nav-meta {
+    gap: 8px;
+  }
+  .nav-meta .find-her-link,
+  .hero-find-her,
+  .audio-pill,
+  .venue-link-cta,
+  .lightbox-nav,
+  .lightbox-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .nav-meta .find-her-link,
+  .hero-find-her {
+    font-size: 0.875rem;
+    padding: 10px 14px;
+  }
+  .audio-pill {
+    position: static;
+    left: auto;
+    bottom: auto;
+    padding: 8px 14px;
+  }
+  .sound-announcement {
+    position: absolute;
+    top: calc(100% + 8px);
+    bottom: auto;
+    left: 16px;
+  }
+  .quick-rail {
+    display: none;
+  }
+  .quote-stripe,
+  .sat-quote {
+    line-height: 1.9;
+  }
+  .act-gallery::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 140px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, #07080c);
+    z-index: 2;
+  }
+  .act-sanctuaries::before {
+    inset: -160px 0 0 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(7, 8, 12, 0.4) 24%, #07080c 70%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   .split-story-grid {
     grid-template-columns: 1fr;
@@ -1942,6 +1986,9 @@ body {
 }
 
 @media (max-width: 640px) {
+  html {
+    scroll-padding-top: 156px;
+  }
   .story-section {
     padding: 80px 20px;
   }
@@ -1977,23 +2024,10 @@ body {
   .gallery-grid {
     gap: 12px;
   }
-  .quick-rail {
-    right: 4px;
-    gap: 10px;
-  }
-  .sound-announcement {
-    left: 12px;
-    bottom: 64px;
-  }
-  .audio-pill {
-    left: 12px;
-    bottom: 12px;
-    padding: 9px 12px;
-  }
   .nav-meta .find-her-link,
   .hero-find-her {
     padding: 10px 14px;
-    font-size: 0.72rem;
+    font-size: 0.875rem;
   }
   .lightbox-container {
     max-width: 100vw;
@@ -2007,8 +2041,8 @@ body {
     right: 6px;
   }
   .lightbox-nav {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     font-size: 1.6rem;
   }
   .lightbox-prev { left: 6px; }

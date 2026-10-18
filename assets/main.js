@@ -435,13 +435,13 @@
     const pTex = new THREE.CanvasTexture(pCanvas);
 
     pointsMaterial = new THREE.PointsMaterial({
-      size: 3.2,
+      size: 2.1,
       map: pTex,
       vertexColors: true,
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      opacity: 0.92
+      opacity: 0.34
     });
 
     particleSystem = new THREE.Points(pointsGeometry, pointsMaterial);
@@ -456,7 +456,7 @@
     linesMaterial = new THREE.LineBasicMaterial({
       color: 0xf5b041,
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.12,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
@@ -574,22 +574,17 @@
       }
       lineAttr.needsUpdate = true;
 
-      // Camera parallax scroll depth & progressive focus blur at bottom
-      camera.position.z = 140 - scrollProgress * 25;
+      camera.position.z = 150;
       camera.position.x = mouse.x * 12;
       camera.position.y = mouse.y * 8;
       camera.lookAt(0, 0, 0);
 
-      // Dynamically soften and expand point sizes near the bottom to create a smooth out-of-focus bokeh
       if (pointsMaterial) {
-        // Base size 3.2 at top, expanding to 6.8 at bottom for diffuse blurry bokeh
-        pointsMaterial.size = 3.2 + scrollProgress * 3.6;
-        // Fade opacity slightly at bottom so text stays ultra-crisp
-        pointsMaterial.opacity = 0.92 - scrollProgress * 0.42;
+        pointsMaterial.size = 2.1;
+        pointsMaterial.opacity = 0.34;
       }
       if (linesMaterial) {
-        // Soften lines toward bottom
-        linesMaterial.opacity = 0.28 * (1 - scrollProgress * 0.65);
+        linesMaterial.opacity = 0.12;
       }
     }
 
@@ -612,9 +607,8 @@
   let threadSparks = [];
   const activeThreadIndices = new Set();
 
-  // Phones / short landscape screens: Act 3 renders as a plain stacked list
-  // (see the matching media query in style.css), so the pinned carousel is skipped.
-  const traitsStackedMQ = window.matchMedia('(max-width: 900px), (max-height: 560px)');
+  // Traits is a normal scrolling list on every screen, so the pinned carousel stays off.
+  const traitsStackedMQ = window.matchMedia('(min-width: 0px)');
 
   // =========================================================================
   // 3. SCROLLYTELLING CONTROLLER & SECTION INTERSECTION OBSERVER
@@ -656,6 +650,7 @@
     let sphereOpacity = 0;
 
     function updateTraitsHubScroll() {
+      if (traitsStackedMQ.matches) return;
       const traitsSection = document.getElementById('act-traits');
       if (!traitsSection) return;
 
@@ -819,6 +814,7 @@
 
     // Animation ticker to smooth 3D motion transitions
     function tickOrbit() {
+      if (traitsStackedMQ.matches) return;
       requestAnimationFrame(tickOrbit);
       const diff = targetOrbitIndex - currentOrbitIndex;
       if (Math.abs(diff) > 0.0005) {
@@ -891,12 +887,33 @@
     }
 
     // Nav Helper: Scroll accurately to destination
+    const menuBtn = document.querySelector('.nav-menu-btn');
+    const siteNav = document.querySelector('.site-nav');
+
+    function setMenuOpen(open) {
+      if (!siteNav || !menuBtn) return;
+      siteNav.classList.toggle('menu-open', open);
+      menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      menuBtn.textContent = open ? 'Close' : 'Menu';
+    }
+
+    if (menuBtn && siteNav) {
+      menuBtn.addEventListener('click', () => {
+        setMenuOpen(!siteNav.classList.contains('menu-open'));
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setMenuOpen(false);
+      });
+    }
+
     function scrollToAct(targetId) {
+      setMenuOpen(false);
       const targetEl = document.getElementById(targetId);
       if (!targetEl) return;
-      const targetTop = targetEl.getBoundingClientRect().top + window.pageYOffset;
+      const navHeight = siteNav ? siteNav.offsetHeight : 88;
+      const targetTop = targetEl.getBoundingClientRect().top + window.pageYOffset - navHeight - 12;
       window.scrollTo({
-        top: Math.round(targetTop),
+        top: Math.max(0, Math.round(targetTop)),
         behavior: 'instant'
       });
       const shapeKey = targetEl.getAttribute('data-shape') || 'fox';

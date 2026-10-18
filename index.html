@@ -17,15 +17,6 @@
 </head>
 <body>
 
-  <!-- Ambient Audio Soundscape (Web Audio API Synthesizer) -->
-  <p id="sound-announcement" class="sound-announcement" role="status" aria-live="polite"></p>
-  <button type="button" id="audio-pill" class="audio-pill" aria-pressed="false" aria-label="Turn sound on">
-    <span class="audio-waves" aria-hidden="true">
-      <span></span><span></span><span></span><span></span>
-    </span>
-    <span class="audio-label">SOUND: OFF</span>
-  </button>
-
   <!-- Background WebGL 3D Constellation Canvas -->
   <div id="webgl-stage" aria-hidden="true">
     <canvas id="webgl-canvas"></canvas>
@@ -51,7 +42,7 @@
       </div>
     </div>
 
-    <nav class="nav-chapters" aria-label="Chapters">
+    <nav class="nav-chapters" id="chapter-menu" aria-label="Chapters">
       <a href="#act-prologue" class="chapter-link active" data-act="0"><span class="ch-num">01</span><span class="ch-name">PROLOGUE</span></a>
       <a href="#act-origins" class="chapter-link" data-act="1"><span class="ch-num">02</span><span class="ch-name">DOSSIER</span></a>
       <a href="#act-traits" class="chapter-link" data-act="2"><span class="ch-num">03</span><span class="ch-name">TRAITS</span></a>
@@ -60,6 +51,14 @@
     </nav>
 
     <div class="nav-meta">
+      <p id="sound-announcement" class="sound-announcement" role="status" aria-live="polite"></p>
+      <button type="button" id="audio-pill" class="audio-pill" aria-pressed="false" aria-label="Turn sound on">
+        <span class="audio-waves" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </span>
+        <span class="audio-label">SOUND: OFF</span>
+      </button>
+      <button type="button" class="nav-menu-btn" aria-expanded="false" aria-controls="chapter-menu">Menu</button>
       <a href="#act-sanctuaries" class="find-her-link">Find her in game</a>
     </div>
   </header>
@@ -379,28 +378,28 @@
             <div class="venue-decor">MATERIA &bull; OCE</div>
             <h3 class="venue-name">The Succubus Den</h3>
             <p class="venue-desc">An exotic haven where the finest courtesans and entertainers host discerning travelers under crimson lanterns.</p>
-            <div class="venue-link-cta"><span>ENTER SANCTUARY</span> <span>→</span></div>
+            <div class="venue-link-cta"><span>Visit The Succubus Den</span> <span aria-hidden="true">→</span></div>
           </a>
 
           <a href="https://thevelvettemptress.carrd.co/" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
             <div class="venue-decor">DYNAMIS &bull; NA</div>
             <h3 class="venue-name">The Velvet Temptress</h3>
             <p class="venue-desc">A plush lounge steeped in midnight velvet, curated for deep desires, velvet whispers, and unforgettable nights.</p>
-            <div class="venue-link-cta"><span>ENTER SANCTUARY</span> <span>→</span></div>
+            <div class="venue-link-cta"><span>Visit The Velvet Temptress</span> <span aria-hidden="true">→</span></div>
           </a>
 
           <a href="https://www.f-list.net/c/kos%20mos" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
             <div class="venue-decor">CODEX</div>
             <h3 class="venue-name">F-List Character Dossier</h3>
             <p class="venue-desc">Comprehensive roleplay profile, detailed preferences, physical statistics, and background history.</p>
-            <div class="venue-link-cta"><span>INSPECT RECORD</span> <span>→</span></div>
+            <div class="venue-link-cta"><span>Open the F-List profile</span> <span aria-hidden="true">→</span></div>
           </a>
 
           <a href="https://bdsmtest.org/r/VR2ZaaVQ" target="_blank" rel="noopener noreferrer" class="venue-card glass-panel" data-tilt>
             <div class="venue-decor">EVALUATION</div>
             <h3 class="venue-name">BDSM Alignment</h3>
             <p class="venue-desc">Orientation and Appetites for prospective patrons.</p>
-            <div class="venue-link-cta"><span>VIEW RESULTS</span> <span>→</span></div>
+            <div class="venue-link-cta"><span>View the alignment results</span> <span aria-hidden="true">→</span></div>
           </a>
 
         </div>
