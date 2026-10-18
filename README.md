@@ -1,6 +1,6 @@
-# K'os Mos — Cinematic 3D Scrollytelling Experience
+# K'os Mos — Interactive 3D Scrollytelling Site
 
-An award-winning, interactive cinematic website designed for **K'os Mos** (Courtesan of Balmung & Tonberry, Wandering Bard & Mercenary for hire).
+An award-winning, interactive website designed for **K'os Mos** (Courtesan of Balmung & Tonberry, Wandering Bard & Mercenary for hire).
 
 ## Features & Highlights
 
@@ -19,7 +19,7 @@ An award-winning, interactive cinematic website designed for **K'os Mos** (Court
    - Foreground character layers dynamically break in front of the spatial guide bars on mouse movement.
    - Deep background recession planes with atmospheric foxfire smoke overlays.
 
-3. **Cinematic Scrollytelling Architecture**
+3. **Scrollytelling Architecture**
    - Smooth Chapter navigation (`01 PROLOGUE` through `06 DEN`).
    - Sticky left column with interactive trait harmonizer and live blockquotes.
    - Right-edge vertical quick rail and live scroll percentage progress line.
