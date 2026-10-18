@@ -615,7 +615,7 @@
   // =========================================================================
   function initScrollytelling() {
     const sections = document.querySelectorAll('.story-section');
-    const navLinks = document.querySelectorAll('.chapter-link, .find-her-link');
+    const navLinks = document.querySelectorAll('.chapter-link, a.find-her-link');
     const railDots = document.querySelectorAll('.rail-dot');
     const progressBar = document.getElementById('scroll-progress-line');
 
@@ -1433,7 +1433,75 @@
       });
     }
 
-    initSoundAnnouncement(pill);
+  }
+
+  function initAgeGate() {
+    const gate = document.getElementById('age-gate');
+    const enterBtn = document.getElementById('age-enter');
+    const leaveBtn = document.getElementById('age-leave');
+    const hidden = document.querySelectorAll('[data-age-hide]');
+    const pill = document.getElementById('audio-pill');
+    if (!gate || !enterBtn || !leaveBtn) return;
+
+    const releasePage = () => {
+      document.documentElement.classList.remove('age-locked');
+      hidden.forEach((el) => {
+        el.inert = false;
+        if (el.getAttribute('aria-hidden') === 'true' && !el.classList.contains('telemetry-hud')) {
+          el.removeAttribute('aria-hidden');
+        }
+      });
+    };
+
+    const lockPage = () => {
+      document.documentElement.classList.add('age-locked');
+      hidden.forEach((el) => {
+        el.inert = true;
+        el.setAttribute('aria-hidden', 'true');
+      });
+    };
+
+    if (document.documentElement.classList.contains('age-ok')) {
+      gate.hidden = true;
+      releasePage();
+      initSoundAnnouncement(pill);
+      return;
+    }
+
+    lockPage();
+    enterBtn.focus();
+
+    const buttons = [enterBtn, leaveBtn];
+    gate.addEventListener('keydown', (event) => {
+      if (event.key !== 'Tab') return;
+      const active = document.activeElement;
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+
+    enterBtn.addEventListener('click', () => {
+      try { localStorage.setItem('kosmos-age-ok', '1'); } catch (e) {}
+      document.documentElement.classList.add('age-ok');
+      gate.hidden = true;
+      releasePage();
+      initSoundAnnouncement(pill);
+      const main = document.querySelector('main');
+      if (main) {
+        main.setAttribute('tabindex', '-1');
+        main.focus();
+      }
+    });
+
+    leaveBtn.addEventListener('click', () => {
+      window.location.replace('https://www.google.com/');
+    });
   }
 
   // =========================================================================
@@ -1451,6 +1519,7 @@
     initTraitSelector();
     initLightbox();
     initAudioPill();
+    initAgeGate();
   }
 
   if (document.readyState === 'loading') {

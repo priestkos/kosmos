@@ -259,6 +259,109 @@ body {
 }
 
 /* =========================================================================
+   AGE GATE
+   ========================================================================= */
+
+html.age-locked {
+  overflow: hidden;
+}
+
+html.age-locked [data-age-hide] {
+  visibility: hidden;
+}
+
+html.age-ok .age-gate {
+  display: none;
+}
+
+.age-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #07080c;
+}
+
+.age-gate-card {
+  width: min(100%, 520px);
+  padding: 36px 40px 32px;
+  text-align: left;
+}
+
+.age-gate-card .brand-crest {
+  margin-bottom: 22px;
+}
+
+.age-gate-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffc56a;
+  margin-bottom: 12px;
+}
+
+.age-gate-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #fff;
+  margin-bottom: 14px;
+}
+
+.age-gate-copy {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 40ch;
+}
+
+.age-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.age-gate .find-her-link,
+.age-leave {
+  min-height: 48px;
+  min-width: 44px;
+  flex: 1 1 200px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.age-leave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #12151e;
+  color: #f4f7fb;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.age-leave:hover {
+  border-color: rgba(255, 197, 106, 0.55);
+  color: #fff;
+}
+
+.age-leave:focus-visible,
+.age-gate .find-her-link:focus-visible {
+  outline: 2px solid var(--foxfire-gold);
+  outline-offset: 3px;
+}
+
+/* =========================================================================
    FLOATING HUD & NAVIGATION
    ========================================================================= */
 
