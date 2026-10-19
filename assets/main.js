@@ -1298,6 +1298,30 @@
     });
   }
 
+  // Gallery tiles keep their WebP URL in data-src until age is confirmed.
+  // The lightbox still reads data-img, the full-size original, and loads it on open.
+  function loadGalleryThumbs() {
+    if (!document.documentElement.classList.contains('age-ok')) return;
+    document.querySelectorAll('.gallery-tile img[data-src]').forEach((img) => {
+      if (img.getAttribute('src')) return;
+      img.src = img.getAttribute('data-src');
+    });
+  }
+
+  function loadGalleryThumbsWhenNear() {
+    const gallery = document.getElementById('act-gallery');
+    if (!gallery || typeof IntersectionObserver !== 'function') {
+      loadGalleryThumbs();
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      loadGalleryThumbs();
+      observer.disconnect();
+    }, { rootMargin: '200px 0px' });
+    observer.observe(gallery);
+  }
+
   // =========================================================================
   // 7. 4K LIGHTBOX & DYNAMIC EXHIBIT NUMBERING
   // =========================================================================
@@ -1551,6 +1575,7 @@
       gate.hidden = true;
       enterBtn.removeAttribute('autofocus');
       releasePage();
+      loadGalleryThumbsWhenNear();
       initSoundAnnouncement(pill);
       return;
     }
@@ -1567,6 +1592,7 @@
       disarmTrap();
       gate.hidden = true;
       releasePage();
+      loadGalleryThumbs();
       initSoundAnnouncement(pill);
       restorePageFocus();
     });
