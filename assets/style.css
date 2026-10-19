@@ -2215,10 +2215,18 @@ html.age-ok .age-gate {
   }
 }
 
-/* Below 376px the heading wraps to two lines and still starts inside a 129px
-   header. Restore the hero's own 140px top padding so the line box clears it. */
-@media (max-width: 375px) {
+/* The nav stays two rows, 129.2px tall, through 620px. Below 640px the story
+   padding shorthand cuts the hero back to 80px, so from 376px up the prologue
+   heading starts inside that header (21px at 376–381px, where the title wraps,
+   and 49px on short phones such as 390x664). Clear the measured header plus
+   the 10.8px gap the hero's 140px padding already uses. Match the bottom
+   padding so a tall phone (390x844) stays centered instead of sliding down.
+   On a short viewport the block fills the hero and sits on that top padding,
+   so vertical centering cannot pull the heading back under the header. */
+@media (max-width: 620px) {
   .act-hero {
-    padding-top: 140px;
+    --hero-header-clearance: calc(129.2px + 10.8px);
+    padding-top: var(--hero-header-clearance);
+    padding-bottom: var(--hero-header-clearance);
   }
 }
