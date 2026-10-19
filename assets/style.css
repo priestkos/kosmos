@@ -212,6 +212,11 @@ body {
   font-size: var(--mono-label);
   letter-spacing: 0.08em;
   color: var(--label-ink);
+  white-space: nowrap;
+}
+
+.audio-label-short {
+  display: none;
 }
 
 .nav-meta {
@@ -2175,5 +2180,45 @@ html.age-ok .age-gate {
   }
   .spec-divider {
     display: none;
+  }
+}
+
+/* The 14px "SOUND: OFF" label wraps through 443px and stretches the header.
+   Show the state word only, still at 14px, and tighten the row so the nav
+   button stays within its pre-regression clip. */
+@media (max-width: 443px) {
+  .audio-label-full {
+    display: none;
+  }
+  .audio-label-short {
+    display: inline;
+  }
+  .site-nav {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .nav-meta {
+    gap: 4px;
+  }
+  .nav-menu-btn {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .nav-meta .find-her-link {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .audio-pill {
+    gap: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+/* Below 376px the heading wraps to two lines and still starts inside a 129px
+   header. Restore the hero's own 140px top padding so the line box clears it. */
+@media (max-width: 375px) {
+  .act-hero {
+    padding-top: 140px;
   }
 }

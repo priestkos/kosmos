@@ -1387,10 +1387,19 @@
   // 7. AMBIENT AUDIO PILL TRIGGER
   // =========================================================================
   function syncAudioControl(pill, label, isPlaying) {
+    const state = isPlaying ? 'ON' : 'OFF';
+    const visible = `SOUND: ${state}`;
     pill.classList.toggle('playing', isPlaying);
     pill.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
-    pill.setAttribute('aria-label', isPlaying ? 'Turn sound off' : 'Turn sound on');
-    if (label) label.textContent = isPlaying ? 'SOUND: ON' : 'SOUND: OFF';
+    pill.setAttribute('aria-label', `${isPlaying ? 'Turn sound off' : 'Turn sound on'}, ${visible}`);
+    const full = label?.querySelector('.audio-label-full');
+    const short = label?.querySelector('.audio-label-short');
+    if (full && short) {
+      full.textContent = visible;
+      short.textContent = state;
+    } else if (label) {
+      label.textContent = visible;
+    }
   }
 
   function initSoundAnnouncement(pill) {
