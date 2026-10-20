@@ -10,10 +10,12 @@
   :root{
     --bg:#202224; --bg-hi:#25272a; --fg:#ececec; --sub:#a9acaf; --muted:#7f8285;
     --btn:#e4e4e2; --btn-fg:#1c1e20;
+    --ctl-bg:rgba(30,32,34,.66); --ctl-br:rgba(205,208,211,.20);
   }
   :root[data-theme="light"]{
     --bg:#e7e6e2; --bg-hi:#f2f1ee; --fg:#17191b; --sub:#4a4d50; --muted:#75787b;
     --btn:#1c1e20; --btn-fg:#ececec;
+    --ctl-bg:rgba(242,241,238,.74); --ctl-br:rgba(30,32,34,.18);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -45,7 +47,19 @@
   a.btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
   a.btn:active{transform:translateY(0)}
   a.btn:focus-visible{outline:2px solid var(--fg);outline-offset:4px}
-  @media (max-width:560px){.bar{padding:0 16px;font-size:11px} p.sub{padding:0 12px}}
+  .controls{position:fixed;left:50%;bottom:42px;transform:translateX(-50%);z-index:3;
+       display:flex;align-items:center;gap:20px;padding:7px 16px;border-radius:999px;
+       background:var(--ctl-bg);border:1px solid var(--ctl-br);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .ctl{display:flex;align-items:center;gap:7px;font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;
+       font-size:11px;letter-spacing:.14em;color:var(--muted)}
+  .ctl .n{min-width:2ch;text-align:center;color:var(--fg);font-variant-numeric:tabular-nums}
+  .ctl button{background:none;border:0;padding:3px 6px;color:var(--muted);font:inherit;letter-spacing:0;
+       cursor:pointer;line-height:1;border-radius:4px;transition:color .15s ease}
+  .ctl button:hover:not(:disabled),.ctl button:focus-visible{color:var(--fg);outline:none}
+  .ctl button:focus-visible{box-shadow:0 0 0 1px var(--fg)}
+  .ctl button:disabled{opacity:.28;cursor:default}
+  @media (max-width:560px){.bar{padding:0 16px;font-size:11px} p.sub{padding:0 12px}
+       .controls{bottom:34px;gap:13px;padding:6px 12px} .ctl{font-size:10px;letter-spacing:.1em}}
 </style>
 </head>
 <body>
@@ -61,6 +75,21 @@
   <p class="sub">You're looking in the wrong place for me~</p>
   <a class="btn" href="/">BACK TO THE DECK</a>
 </main>
+
+<div class="controls" role="group" aria-label="Aircraft controls">
+  <div class="ctl">
+    <span>DECK</span>
+    <button type="button" data-target="deck" data-step="-1" aria-label="Fewer planes on deck">&minus;</button>
+    <span class="n" id="deckN">15</span>
+    <button type="button" data-target="deck" data-step="1" aria-label="More planes on deck">+</button>
+  </div>
+  <div class="ctl">
+    <span>LAUNCH</span>
+    <button type="button" data-target="launch" data-step="-1" aria-label="Fewer planes launching">&minus;</button>
+    <span class="n" id="launchN">1</span>
+    <button type="button" data-target="launch" data-step="1" aria-label="More planes launching">+</button>
+  </div>
+</div>
 
 <div class="bar bottom mono">
   <span>DRAG TO TURN</span>
@@ -237,6 +266,40 @@ const PARKED = [
   [1,6.2,-2.6],[-47,3,1.57]
 ];
 
+/* ---------- aircraft counts (user controlled) ---------- */
+const MAX_DECK = PARKED.length, MAX_LAUNCH = 4;
+let deckCount = MAX_DECK, launchCount = 1;
+const deckN = document.getElementById('deckN'), launchN = document.getElementById('launchN');
+const ctlButtons = [...document.querySelectorAll('.ctl button')];
+
+function setCounts(d, l, persist){
+  deckCount = Math.max(0, Math.min(MAX_DECK, Math.round(d)));
+  launchCount = Math.max(0, Math.min(MAX_LAUNCH, Math.round(l)));
+  deckN.textContent = deckCount; launchN.textContent = launchCount;
+  for (const b of ctlButtons){
+    const step = Number(b.dataset.step);
+    const v = b.dataset.target === 'deck' ? deckCount : launchCount;
+    const max = b.dataset.target === 'deck' ? MAX_DECK : MAX_LAUNCH;
+    b.disabled = step < 0 ? v <= 0 : v >= max;
+  }
+  if (persist){ try{
+    localStorage.setItem('carrier404-deck', deckCount);
+    localStorage.setItem('carrier404-launch', launchCount);
+  }catch(e){} }
+}
+for (const b of ctlButtons) b.addEventListener('click', () => {
+  const step = Number(b.dataset.step);
+  if (b.dataset.target === 'deck') setCounts(deckCount + step, launchCount, true);
+  else setCounts(deckCount, launchCount + step, true);
+});
+let savedDeck = MAX_DECK, savedLaunch = 1;
+try{
+  const sd = localStorage.getItem('carrier404-deck'), sl = localStorage.getItem('carrier404-launch');
+  if (sd !== null && sd !== '') savedDeck = Number(sd);
+  if (sl !== null && sl !== '') savedLaunch = Number(sl);
+}catch(e){}
+setCounts(savedDeck, savedLaunch, false);
+
 /* ---------- launch cycle ---------- */
 const CYCLE = 21, ROLL = 1.8, LAND = 16;
 const CAT = [14,3.5]; // catapult start (starboard cat)
@@ -343,7 +406,6 @@ const t0 = performance.now();
 let lastHud = '';
 function frame(now){
   const t = (now - t0)/1000;
-  const tc = t % CYCLE;
 
   // yaw: drag + inertia, then ease back to the hero angle
   if (!dragging){
@@ -393,7 +455,7 @@ function frame(now){
 
   // objects on deck, depth sorted
   const items = [];
-  for (const [x,z,h] of PARKED){ const m = jetModel(x,0.35,z,h); items.push({d:depthOf(m.body), draw:()=>drawJet(m)}); }
+  for (const [x,z,h] of PARKED.slice(0, deckCount)){ const m = jetModel(x,0.35,z,h); items.push({d:depthOf(m.body), draw:()=>drawJet(m)}); }
   for (const f of island){
     if (!facing(f.n)) continue;
     const fill = f.top ? pal.islTop : pal.isl;
@@ -405,24 +467,38 @@ function frame(now){
       ctx.fillStyle = pal.islTop; ctx.fill(); ctx.strokeStyle = pal.line; ctx.lineWidth = 1; ctx.stroke(); }
   }});
 
-  const L = launcher(tc);
-  const lm = jetModel(L.p[0], L.p[1], L.p[2], L.hdg, L.pitch, L.roll);
-  if (L.p[1] < 4) items.push({d:depthOf(lm.body), draw:()=>drawJet(lm)});
+  // launchers: launchCount jets evenly phased through the cycle
+  const jets = [];
+  for (let i = 0; i < launchCount; i++){
+    const jtc = (t + i * (CYCLE / launchCount)) % CYCLE;
+    const L = launcher(jtc);
+    jets.push({ tc: jtc, L, m: jetModel(L.p[0], L.p[1], L.p[2], L.hdg, L.pitch, L.roll) });
+  }
+  for (const j of jets) if (j.L.p[1] < 4) items.push({d:depthOf(j.m.body), draw:()=>drawJet(j.m)});
   items.sort((a,b)=>b.d-a.d);
   for (const it of items) it.draw();
 
-  if (L.p[1] >= 4){
+  for (const j of jets){
+    if (j.L.p[1] < 4) continue;
     // little shadow on the water
-    ctx.save(); ctx.globalAlpha = Math.max(0, 0.5 - L.p[1]/70);
-    const shp = lm.body.map(p => { const q = P(p[0]+L.p[1]*0.08, HULL_Y - bob, p[2]+L.p[1]*0.12); return [q[0],q[1]]; });
+    ctx.save(); ctx.globalAlpha = Math.max(0, 0.5 - j.L.p[1]/70);
+    const shp = j.m.body.map(p => { const q = P(p[0]+j.L.p[1]*0.08, HULL_Y - bob, p[2]+j.L.p[1]*0.12); return [q[0],q[1]]; });
     ctx.fillStyle = pal.shadow; pathPoly(shp); ctx.fill(); ctx.restore();
-    drawJet(lm);
+    drawJet(j.m);
   }
 
   // HUD
-  const air = (tc >= ROLL*0.9 && tc < LAND) ? 1 : 0;
-  const cd = Math.max(1, Math.ceil(CYCLE - tc));
-  const txt = `deck ${16-air} · air ${air} · launch ${String(cd).padStart(2,'0')}s`;
+  const air = jets.filter(j => j.L.air).length;
+  const onDeck = deckCount + (jets.length - air);
+  let txt;
+  if (!jets.length){
+    txt = `deck ${onDeck} · air 0 · launch --`;
+  } else {
+    let next = Infinity;
+    for (const j of jets) next = Math.min(next, CYCLE - j.tc);
+    const cd = Math.max(1, Math.ceil(next));
+    txt = `deck ${onDeck} · air ${air} · launch ${String(cd).padStart(2,'0')}s`;
+  }
   if (txt !== lastHud){ hud.textContent = txt; lastHud = txt; }
 
   requestAnimationFrame(frame);
