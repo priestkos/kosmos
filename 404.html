@@ -1,32 +1,453 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Page not found — K'os Mos — The Crimson Kitsune</title>
-  <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#07080c">
-  <link rel="icon" href="data:,">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+JP:wght@400;600;900&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="/assets/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>404 — This page took off without you.</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#202224">
+<style>
+  :root{
+    --bg:#202224; --bg-hi:#25272a; --fg:#ececec; --sub:#a9acaf; --muted:#7f8285;
+    --btn:#e4e4e2; --btn-fg:#1c1e20;
+  }
+  :root[data-theme="light"]{
+    --bg:#e7e6e2; --bg-hi:#f2f1ee; --fg:#17191b; --sub:#4a4d50; --muted:#75787b;
+    --btn:#1c1e20; --btn-fg:#ececec;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(120% 90% at 55% 72%, var(--bg-hi) 0%, var(--bg) 55%, var(--bg) 100%);
+    background-color:var(--bg);
+    color:var(--fg);
+    font-family:"Inter","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+    overflow:hidden; user-select:none; -webkit-user-select:none;
+  }
+  canvas#sea{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+  canvas#sea.dragging{cursor:grabbing}
+  .mono{font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .bar{position:fixed;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+       padding:0 30px;font-size:13px;letter-spacing:.14em;color:var(--muted);pointer-events:none;z-index:2}
+  .bar.top{top:14px}
+  .bar.bottom{bottom:12px}
+  .bar button{pointer-events:auto;background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;cursor:pointer;padding:4px 0}
+  .bar button:hover,.bar button:focus-visible{color:var(--fg);outline:none}
+  #hud{letter-spacing:.02em;white-space:pre}
+  main{position:fixed;left:0;right:0;top:clamp(52px,7.2vh,96px);display:flex;flex-direction:column;align-items:center;
+       text-align:center;z-index:2;pointer-events:none}
+  h1{font-weight:700;font-size:clamp(92px,13.6vw,172px);line-height:.86;letter-spacing:-.045em;color:var(--fg)}
+  p.sub{margin-top:clamp(18px,2.6vh,30px);font-size:clamp(17px,1.95vw,23px);letter-spacing:.035em;color:var(--sub);font-weight:400}
+  a.btn{pointer-events:auto;margin-top:clamp(34px,4.6vh,56px);display:inline-flex;align-items:center;justify-content:center;
+        width:clamp(240px,26.8vw,320px);height:clamp(58px,6.5vh,74px);background:var(--btn);color:var(--btn-fg);
+        border-radius:7px;text-decoration:none;font-size:clamp(13px,1.3vw,15.5px);font-weight:600;letter-spacing:.14em;
+        transition:transform .18s ease, filter .18s ease}
+  a.btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+  a.btn:active{transform:translateY(0)}
+  a.btn:focus-visible{outline:2px solid var(--fg);outline-offset:4px}
+  @media (max-width:560px){.bar{padding:0 16px;font-size:11px}}
+</style>
 </head>
 <body>
-  <div class="age-gate">
-    <div class="age-gate-card glass-panel">
-      <div class="card-edge-glow" aria-hidden="true"></div>
-      <div class="brand-crest" aria-hidden="true"><span class="fox-emblem">狐</span></div>
-      <p class="age-gate-kicker">404</p>
-      <h1 class="age-gate-title">Page not found</h1>
-      <p class="age-gate-copy">This address does not match a page on this site.</p>
-      <div class="age-gate-actions">
-        <a class="find-her-link" href="/">Return home</a>
-      </div>
-    </div>
-  </div>
+<canvas id="sea" aria-label="Interactive aircraft carrier. Drag to turn."></canvas>
+
+<div class="bar top">
+  <button id="theme" type="button" aria-label="Toggle colour theme">Dark</button>
+  <span>AIRCRAFT CARRIER</span>
+</div>
+
+<main>
+  <h1>404</h1>
+  <p class="sub">This page took off without you.</p>
+  <a class="btn" href="/">BACK TO THE DECK</a>
+</main>
+
+<div class="bar bottom mono">
+  <span>DRAG TO TURN</span>
+  <span id="hud">deck 16 · air 0 · launch 21s</span>
+</div>
+
+<script>
+(() => {
+'use strict';
+const cv = document.getElementById('sea');
+const ctx = cv.getContext('2d');
+const hud = document.getElementById('hud');
+const themeBtn = document.getElementById('theme');
+const root = document.documentElement;
+
+/* ---------- palette ---------- */
+const PAL = {
+  dark:  {line:'rgba(205,208,211,.58)', lineDim:'rgba(205,208,211,.26)', deck:'#1d1f21', hull:'#17181a', hullLit:'#1a1c1e',
+          isl:'#202224', islTop:'#252729', jet:'#232527', shadow:'rgba(0,0,0,.42)', streak:'rgba(255,255,255,.035)', wake:'rgba(210,214,218,'},
+  light: {line:'rgba(30,32,34,.85)', lineDim:'rgba(30,32,34,.38)', deck:'#dcdbd7', hull:'#c9c8c4', hullLit:'#d3d2ce',
+          isl:'#d0cfcb', islTop:'#e4e3df', jet:'#e6e5e1', shadow:'rgba(0,0,0,.16)', streak:'rgba(0,0,0,.04)', wake:'rgba(40,42,44,'}
+};
+let pal = PAL.dark;
+function setTheme(t){
+  root.dataset.theme = t; pal = PAL[t];
+  themeBtn.textContent = t === 'dark' ? 'Dark' : 'Light';
+  try{ localStorage.setItem('carrier404-theme', t); }catch(e){}
+  buildStreaks();
+}
+themeBtn.addEventListener('click', () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+/* ---------- camera ---------- */
+const PITCH = 50 * Math.PI/180, SP = Math.sin(PITCH), CP = Math.cos(PITCH);
+// bow (+x) points to screen upper-left
+const YAW0 = Math.atan2(0.47/SP, -0.88);
+let yaw = YAW0, yawVel = 0, dragging = false, lastX = 0, lastMove = -1e9;
+let W=0, H=0, DPR=1, S=7, CX=0, CY=0;
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  S = Math.min(W, H*1.06) / 148;
+  CX = W*0.535; CY = H*0.636;
+  if (W < 640){ S = W/118; CY = H*0.70; }
+  buildStreaks();
+}
+
+let cy_ = 1, sy_ = 0, bob = 0;
+// world (ship frame: x fwd, y up, z starboard) -> screen
+function P(x,y,z){
+  y += bob;
+  const xr = x*cy_ - z*sy_, zr = x*sy_ + z*cy_;
+  return [CX + xr*S, CY - (y*CP + zr*SP)*S, zr*CP - y*SP];
+}
+const VIEW = [0, SP, -CP]; // toward viewer, in rotated frame
+function facing(n){ // n = world normal
+  const xr = n[0]*cy_ - n[2]*sy_, zr = n[0]*sy_ + n[2]*cy_;
+  return n[1]*VIEW[1] + zr*VIEW[2] > 0.0001 || false;
+}
+
+/* ---------- geometry ---------- */
+const DECK = [
+  [53,1],[48,7],[32,10],[6,11],[-12,13.2],[-30,13.2],[-46,11.2],[-50,7],
+  [-50,-6],[-45,-12],[-27,-17.2],[-7,-17.2],[8,-12.5],[30,-7.2],[46,-3]
+];
+const HULL_Y = -12.5;
+const WL = DECK.map(([x,z]) => [x>40 ? x*0.96+3.5 : x*0.97, Math.max(-7.2, Math.min(7.2, z*0.62))]);
+
+function polyCentroid(pts){ let x=0,y=0,z=0; for(const p of pts){x+=p[0];y+=p[1];z+=p[2];} const n=pts.length; return [x/n,y/n,z/n]; }
+
+// hull side quads
+const hullFaces = [];
+for (let i=0;i<DECK.length;i++){
+  const j=(i+1)%DECK.length;
+  const a=[DECK[i][0],0,DECK[i][1]], b=[DECK[j][0],0,DECK[j][1]];
+  const c=[WL[j][0],HULL_Y,WL[j][1]], d=[WL[i][0],HULL_Y,WL[i][1]];
+  const m = polyCentroid([a,b,c,d]);
+  // outward normal approx: perpendicular to edge in plan, pointing away from axis
+  let nx = b[2]-a[2], nz = -(b[0]-a[0]);
+  if (nx*m[0] + nz*m[2] < 0){ nx=-nx; nz=-nz; }
+  hullFaces.push({pts:[a,b,c,d], n:[nx,-0.25*Math.hypot(nx,nz),nz]});
+}
+
+function box(x0,x1,y0,y1,z0,z1){
+  const v=(x,y,z)=>[x,y,z];
+  return [
+    {pts:[v(x0,y1,z0),v(x1,y1,z0),v(x1,y1,z1),v(x0,y1,z1)], n:[0,1,0], top:true},
+    {pts:[v(x0,y0,z0),v(x1,y0,z0),v(x1,y1,z0),v(x0,y1,z0)], n:[0,0,-1]},
+    {pts:[v(x0,y0,z1),v(x1,y0,z1),v(x1,y1,z1),v(x0,y1,z1)], n:[0,0,1]},
+    {pts:[v(x1,y0,z0),v(x1,y0,z1),v(x1,y1,z1),v(x1,y1,z0)], n:[1,0,0]},
+    {pts:[v(x0,y0,z0),v(x0,y0,z1),v(x0,y1,z1),v(x0,y1,z0)], n:[-1,0,0]},
+  ];
+}
+const island = [
+  ...box(-21,-6, 0,7.5, 8.6,12.6),
+  ...box(-18,-9, 7.5,11.5, 9.2,12.2),
+  ...box(-16,-11, 11.5,13.2, 9.8,11.8),
+];
+const islandLines = [
+  [[-13.5,13.2,10.8],[-13.5,22.5,10.8]],
+  [[-13.5,16,8.6],[-13.5,16,13]],
+  [[-13.5,19.6,9.4],[-13.5,19.6,12.2]],
+  [[-13.5,13.2,9.8],[-13.5,16,8.6]],[[-13.5,13.2,11.8],[-13.5,16,13]],
+  [[-15.5,15,10.8],[-11.5,15,10.8]],
+  [[-21,4,8.6],[-6,4,8.6]],                     // island band
+  [[-18.6,9.5,9.2],[-16.4,9.5,9.2]],[[-15.6,9.5,9.2],[-13.4,9.5,9.2]],[[-12.6,9.5,9.2],[-10.4,9.5,9.2]], // bridge windows
+];
+// lattice mast: two legs with zig-zag bracing
+(() => { const x=-13.5, za=9.9, zb=11.7; let up=true;
+  islandLines.push([[x,13.2,za],[x,20,10.5]], [[x,13.2,zb],[x,20,11.1]]);
+  for (let y=13.2; y<19.6; y+=1.3){ const t=(y-13.2)/6.8, z0=za+(10.5-za)*t, z1=zb+(11.1-zb)*t, t2=(y+1.3-13.2)/6.8;
+    const n0=za+(10.5-za)*t2, n1=zb+(11.1-zb)*t2;
+    islandLines.push(up ? [[x,y,z0],[x,y+1.3,n1]] : [[x,y,z1],[x,y+1.3,n0]]); up=!up; }
+})();
+const radomes = [[-17,11.9,9.6,0.9],[-10,11.9,11.6,0.8],[-13.5,22.8,10.8,0.55]];
+// deck-edge lights
+const deckLights = [];
+for (let i=0;i<DECK.length;i++){ const a=DECK[i], b=DECK[(i+1)%DECK.length], L=Math.hypot(b[0]-a[0],b[1]-a[1]);
+  for (let d=3; d<L-1; d+=7){ const k=d/L; deckLights.push([a[0]+(b[0]-a[0])*k, 0.05, a[1]+(b[1]-a[1])*k]); } }
+
+// deck markings (y slightly above deck)
+const DM = 0.05;
+const ang = Math.atan2(-12.5, 60), adx = Math.cos(ang), adz = Math.sin(ang); // angled deck axis
+const A0 = [-50,-2.2];
+function along(t, off){ return [A0[0]+adx*t - adz*off, DM, A0[1]+adz*t + adx*off]; }
+const deckLines = [];
+const deckDashes = [];
+deckLines.push([along(0,-5.2), along(66,-5.2)]);
+deckLines.push([along(0,5.2), along(60,5.2)]);
+for (let t=2; t<62; t+=5) deckDashes.push([along(t,0), along(t+2.6,0)]);
+// catapults
+deckLines.push([[12,DM,3.6],[50,DM,3.2]]);
+deckLines.push([[10,DM,-2.6],[45,DM,-2.2]]);
+// elevators
+function rect(x0,x1,z0,z1){ return [[x0,DM,z0],[x1,DM,z0],[x1,DM,z1],[x0,DM,z1]]; }
+const elevators = [rect(-38,-30,10.4,13.2), rect(-2,6,8.2,11), rect(-44,-37,-11.5,-7.5)];
+// hull number "78" painted near bow, read from the stern
+const SEG = { // segments in unit box (u right 0..1, v up 0..2)
+  a:[[0,2],[1,2]], b:[[1,2],[1,1]], c:[[1,1],[1,0]], d:[[0,0],[1,0]], e:[[0,0],[0,1]], f:[[0,1],[0,2]], g:[[0,1],[1,1]]
+};
+const DIG = {'7':'abc', '8':'abcdefg'};
+function digitLines(ch, bx, bz, size){
+  return [...DIG[ch]].map(s => SEG[s].map(([u,v]) => [bx + v*size, DM, bz + u*size]));
+}
+const numberLines = [...digitLines('7', 33, -2.6, 1.9), ...digitLines('8', 33, 0.4, 1.9)];
+
+// jet outline (plan): forward +x, starboard +z
+const JH = [[3.4,0],[2.1,0.32],[0.7,0.5],[-0.5,2.3],[-1.35,2.3],[-1.05,0.6],[-2.2,1.25],[-2.85,1.25],[-2.6,0.42],[-3.05,0.36]];
+const JET = [...JH, ...JH.slice(1).reverse().map(([x,z]) => [x,-z])];
+const JK = 0.78;
+function jetModel(x,y,z, hdg, pitch=0, roll=0){
+  const ch=Math.cos(hdg), sh=Math.sin(hdg), cp=Math.cos(pitch), sp=Math.sin(pitch), cr=Math.cos(roll), sr=Math.sin(roll);
+  const T = (lx,ly,lz) => {
+    lx*=JK; ly*=JK; lz*=JK;
+    // roll about x
+    let y1 = ly*cr - lz*sr, z1 = ly*sr + lz*cr;
+    // pitch about z (nose up)
+    let x2 = lx*cp - y1*sp, y2 = lx*sp + y1*cp;
+    // heading about y (positive = toward starboard)
+    return [x + x2*ch - z1*sh, y + y2, z + x2*sh + z1*ch];
+  };
+  return {
+    body: JET.map(([lx,lz]) => T(lx,0,lz)),
+    fins: [[T(-1.7,0,0.45),T(-2.9,1.3,0.55),T(-3.0,0,0.4)],[T(-1.7,0,-0.45),T(-2.9,1.3,-0.55),T(-3.0,0,-0.4)]],
+    canopy: [T(2.0,0.15,0),T(0.6,0.25,0)]
+  };
+}
+const PARKED = [
+  [40,7.4,-2.3],[34,8.4,-2.3],[28,8.8,-2.3],[22,9.1,-2.3],[16,9.3,-2.3],[10,9.5,-2.3],
+  [-25,10.6,-2.25],[-31,10.7,-2.25],[-37,10.0,-2.25],[-43,9.0,-2.25],
+  [37,-1.2,2.4],[31,-4.6,2.35],[25,-6.4,2.35],
+  [1,6.2,-2.6],[-47,3,1.57]
+];
+
+/* ---------- launch cycle ---------- */
+const CYCLE = 21, ROLL = 1.8, LAND = 16;
+const CAT = [14,3.5]; // catapult start (starboard cat)
+const path = [
+  [50,3.2,1.8],[78,4,7],[108,6,15],[128,32,22],[112,82,28],[40,112,30],[-50,104,29],
+  [-112,62,26],[-142,16,20],[-112,6.5,11],
+  along(-8,0).map((v,i)=> i===1 ? 3.2 : v), along(4,0).map((v,i)=> i===1 ? 0.5 : v), along(28,0).map((v,i)=> i===1 ? 0.35 : v)
+];
+function cr(p0,p1,p2,p3,t){
+  const t2=t*t, t3=t2*t;
+  return p1.map((_,i) => 0.5*((2*p1[i]) + (-p0[i]+p2[i])*t + (2*p0[i]-5*p1[i]+4*p2[i]-p3[i])*t2 + (-p0[i]+3*p1[i]-3*p2[i]+p3[i])*t3));
+}
+function pathAt(u){ // u 0..1
+  const n = path.length-1, f = Math.min(n-1e-6, Math.max(0,u*n)), i = Math.floor(f), t = f-i;
+  const p0=path[Math.max(0,i-1)], p1=path[i], p2=path[i+1], p3=path[Math.min(n,i+2)];
+  return cr(p0,p1,p2,p3,t);
+}
+// distance-normalised sampling
+const LUT = (() => { const N=600, d=[0]; let prev=pathAt(0);
+  for(let k=1;k<=N;k++){ const p=pathAt(k/N); d.push(d[k-1]+Math.hypot(p[0]-prev[0],p[1]-prev[1],p[2]-prev[2])); prev=p; }
+  return {N, d, L:d[N]}; })();
+function pathByDist(s){
+  s = Math.max(0, Math.min(LUT.L, s));
+  let lo=0, hi=LUT.N; while(hi-lo>1){ const m=(lo+hi)>>1; if(LUT.d[m]<s) lo=m; else hi=m; }
+  const f = (s - LUT.d[lo]) / Math.max(1e-6, LUT.d[hi]-LUT.d[lo]);
+  return pathAt((lo+f)/LUT.N);
+}
+function easeInOut(t){ return t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+
+function launcher(tc){
+  // returns {pos, hdg, pitch, roll, airborne, onDeck}
+  if (tc < ROLL){ // catapult stroke: accelerate along cat
+    const k = Math.pow(tc/ROLL, 2.2);
+    const x = CAT[0] + (50-CAT[0])*k, z = CAT[1] + (3.2-CAT[1])*k;
+    return {p:[x, 0.45 + Math.max(0,k-0.85)*9, z], hdg:Math.atan2(3.2-CAT[1], 50-CAT[0]), pitch:Math.max(0,k-0.8)*0.6, roll:0, air: k>0.92};
+  }
+  if (tc < LAND){
+    const u = (tc-ROLL)/(LAND-ROLL);
+    // fast out, decelerating approach
+    const s = LUT.L * (1 - Math.pow(1-u, 1.35));
+    const p = pathByDist(s), q = pathByDist(s+1.5);
+    const dx=q[0]-p[0], dy=q[1]-p[1], dz=q[2]-p[2];
+    const hdg = Math.atan2(dz,dx), pitch = Math.atan2(dy, Math.hypot(dx,dz));
+    // bank into turns
+    const q2 = pathByDist(s+7), h2 = Math.atan2(q2[2]-q[2], q2[0]-q[0]);
+    let dh = h2-hdg; while(dh>Math.PI) dh-=2*Math.PI; while(dh<-Math.PI) dh+=2*Math.PI;
+    return {p, hdg, pitch, roll: Math.max(-.7,Math.min(.7, dh*2.2)), air: u < 0.985};
+  }
+  // recovered: taxi back to the catapult while launch counts down
+  const k = easeInOut(Math.min(1,(tc-LAND)/(CYCLE-LAND-0.6)));
+  const e = along(28,0);
+  const x = e[0] + (CAT[0]-e[0])*k, z = e[2] + (CAT[1]-e[2])*k;
+  const hdg = k<1 ? Math.atan2(CAT[1]-e[2], CAT[0]-e[0]) * (1-k) + Math.atan2(3.2-CAT[1], 50-CAT[0]) * k : 0;
+  return {p:[x,0.4,z], hdg, pitch:0, roll:0, air:false};
+}
+
+/* ---------- background streaks ---------- */
+let streakCv = null;
+function buildStreaks(){
+  if (!W) return;
+  streakCv = document.createElement('canvas');
+  streakCv.width = Math.round(W*DPR); streakCv.height = Math.round(H*DPR);
+  const g = streakCv.getContext('2d'); g.scale(DPR,DPR);
+  let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+  g.strokeStyle = pal.streak; g.lineWidth = 1;
+  const a = 0.30; // ~17deg, descending left-to-right
+  for (let i=0;i<140;i++){
+    const x = rnd()*W*1.2 - W*0.1, y = rnd()*H, len = 20 + rnd()*110;
+    g.globalAlpha = 0.4 + rnd()*0.8;
+    g.beginPath(); g.moveTo(x,y); g.lineTo(x+Math.cos(a)*len, y+Math.sin(a)*len); g.stroke();
+  }
+  g.globalAlpha = 1;
+}
+
+// wake particles (ship frame)
+const wake = Array.from({length:70}, (_,i) => ({ t: i/70, side: i%2 ? 1 : -1, j: Math.random() }));
+
+/* ---------- drawing helpers ---------- */
+function pathPoly(pts){
+  ctx.beginPath();
+  pts.forEach((p,i) => i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1]));
+  ctx.closePath();
+}
+function face(pts3, fill, stroke=pal.line, lw=1){
+  const pts = pts3.map(p => P(...p));
+  pathPoly(pts);
+  if (fill){ ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+}
+function seg(a,b, stroke=pal.line, lw=1){
+  const p=P(...a), q=P(...b);
+  ctx.beginPath(); ctx.moveTo(p[0],p[1]); ctx.lineTo(q[0],q[1]); ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke();
+}
+function depthOf(pts){ let d=0; for(const p of pts) d += P(...p)[2]; return d/pts.length; }
+
+function drawJet(m){
+  face(m.body, pal.jet, pal.line, 1);
+  for (const f of m.fins) face(f, pal.jet, pal.line, 1);
+  seg(m.canopy[0], m.canopy[1], pal.line, 1);
+}
+
+/* ---------- frame ---------- */
+const t0 = performance.now();
+let lastHud = '';
+function frame(now){
+  const t = (now - t0)/1000;
+  const tc = t % CYCLE;
+
+  // yaw: drag + inertia, then ease back to the hero angle
+  if (!dragging){
+    yaw += yawVel; yawVel *= 0.94;
+    if (now - lastMove > 1800){
+      let d = YAW0 - yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
+      yaw += d * 0.012;
+    }
+  }
+  const sway = Math.sin(t*0.23)*0.035;
+  cy_ = Math.cos(yaw+sway); sy_ = Math.sin(yaw+sway);
+  bob = Math.sin(t*0.8)*0.18;
+
+  ctx.clearRect(0,0,W,H);
+  if (streakCv) ctx.drawImage(streakCv, 0, 0, W, H);
+
+  // ship shadow on the sea
+  ctx.save();
+  ctx.filter = `blur(${Math.max(6, S*1.6)}px)`;
+  ctx.fillStyle = pal.shadow;
+  const sh = DECK.map(([x,z]) => { const p = P(x - 2, HULL_Y - bob, z + 3); return [p[0] + S*2.2, p[1] + S*3.4]; });
+  pathPoly(sh); ctx.fill();
+  ctx.restore();
+
+  // wake
+  for (const w of wake){
+    const k = (w.t + t*0.045) % 1;
+    const x = -50 - k*70, z = w.side*(6 + k*16 + w.j*4);
+    const p = P(x, HULL_Y+0.2 - bob, z);
+    ctx.fillStyle = pal.wake + ((1-k)*0.55).toFixed(3) + ')';
+    const r = 0.6 + (1-k)*0.9;
+    ctx.fillRect(p[0]-r, p[1]-r*0.5, r*2*(1+k*2), r);
+  }
+
+  // hull sides (back-face culled, far first)
+  const hf = hullFaces.filter(f => facing(f.n)).map(f => ({f, d:depthOf(f.pts)})).sort((a,b)=>b.d-a.d);
+  for (const {f} of hf) face(f.pts, Math.abs(f.n[0]) > Math.abs(f.n[2]) ? pal.hullLit : pal.hull, pal.line, 1);
+  // waterline highlight
+  // deck
+  face(DECK.map(([x,z]) => [x,0,z]), pal.deck, pal.line, 1.1);
+  for (const l of deckLines) seg(l[0], l[1], pal.lineDim);
+  for (const l of deckDashes) seg(l[0], l[1], pal.lineDim);
+  for (const r of elevators) face(r, null, pal.lineDim);
+  for (const l of numberLines) seg(l[0], l[1], pal.lineDim, 1.2);
+  ctx.fillStyle = pal.lineDim;
+  for (const q of deckLights){ const p = P(...q); ctx.fillRect(p[0]-0.8, p[1]-0.8, 1.6, 1.6); }
+
+  // objects on deck, depth sorted
+  const items = [];
+  for (const [x,z,h] of PARKED){ const m = jetModel(x,0.35,z,h); items.push({d:depthOf(m.body), draw:()=>drawJet(m)}); }
+  for (const f of island){
+    if (!facing(f.n)) continue;
+    const fill = f.top ? pal.islTop : pal.isl;
+    items.push({d:depthOf(f.pts) - (f.top?0.01:0), draw:()=>face(f.pts, fill, pal.line, 1)});
+  }
+  items.push({d: P(-13.5, 16, 10.8)[2] - 2, draw:()=>{
+    for (const l of islandLines) seg(l[0], l[1], pal.line, 1);
+    for (const [x,y,z,r] of radomes){ const c = P(x,y,z); ctx.beginPath(); ctx.ellipse(c[0], c[1], r*S, r*S*0.85, 0, 0, Math.PI*2);
+      ctx.fillStyle = pal.islTop; ctx.fill(); ctx.strokeStyle = pal.line; ctx.lineWidth = 1; ctx.stroke(); }
+  }});
+
+  const L = launcher(tc);
+  const lm = jetModel(L.p[0], L.p[1], L.p[2], L.hdg, L.pitch, L.roll);
+  if (L.p[1] < 4) items.push({d:depthOf(lm.body), draw:()=>drawJet(lm)});
+  items.sort((a,b)=>b.d-a.d);
+  for (const it of items) it.draw();
+
+  if (L.p[1] >= 4){
+    // little shadow on the water
+    ctx.save(); ctx.globalAlpha = Math.max(0, 0.5 - L.p[1]/70);
+    const shp = lm.body.map(p => { const q = P(p[0]+L.p[1]*0.08, HULL_Y - bob, p[2]+L.p[1]*0.12); return [q[0],q[1]]; });
+    ctx.fillStyle = pal.shadow; pathPoly(shp); ctx.fill(); ctx.restore();
+    drawJet(lm);
+  }
+
+  // HUD
+  const air = (tc >= ROLL*0.9 && tc < LAND) ? 1 : 0;
+  const cd = Math.max(1, Math.ceil(CYCLE - tc));
+  const txt = `deck ${16-air} · air ${air} · launch ${String(cd).padStart(2,'0')}s`;
+  if (txt !== lastHud){ hud.textContent = txt; lastHud = txt; }
+
+  requestAnimationFrame(frame);
+}
+
+/* ---------- input ---------- */
+cv.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; yawVel = 0; cv.setPointerCapture(e.pointerId); cv.classList.add('dragging'); lastMove = performance.now(); });
+cv.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX; lastX = e.clientX;
+  const d = -dx * 0.0065;
+  yaw += d; yawVel = d; lastMove = performance.now();
+});
+const end = e => { if (!dragging) return; dragging = false; cv.classList.remove('dragging'); lastMove = performance.now(); };
+cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft'){ yawVel = 0.02; lastMove = performance.now(); }
+  if (e.key === 'ArrowRight'){ yawVel = -0.02; lastMove = performance.now(); }
+});
+addEventListener('resize', resize);
+
+let saved = 'dark'; try{ saved = localStorage.getItem('carrier404-theme') || 'dark'; }catch(e){}
+resize(); setTheme(saved);
+requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
