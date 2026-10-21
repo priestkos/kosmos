@@ -12,15 +12,138 @@
   'use strict';
 
   // =========================================================================
-  // 1. WEB AUDIO API SYNTHESIZER (Celestial Foxfire Ambient Drone & Harp)
+  // 1. WEB AUDIO API SYNTHESIZER (Music-box arpeggio ambient loop & harp chimes)
   // =========================================================================
+  const LOOP_SEC = 20;
+  const ARP_STEP_SEC = 0.625;
+  const ARP_STEPS = 32;
+  const BQ_LP_Q = -3.01; // RBJ 0.7071 linear Q on lowpass/highpass in Web Audio
+  const SOUNDSCAPE_OUTPUT_GAIN = 0.873 * 0.5; // ~6 dB below reference -18 LUFS level
+  const NOTE_TO_SEMITONE = {
+    C: -9, 'C#': -8, D: -7, 'D#': -6, E: -5, F: -4, 'F#': -3, G: -2, 'G#': -1, A: 0, 'A#': 1, B: 2
+  };
+  const ARP_PATTERN = [
+    ['D4', 'A4', 'D5', 'E5', 'F#5', 'E5', 'D5', 'A4'],
+    ['B3', 'F#4', 'B4', 'D5', 'E5', 'D5', 'B4', 'F#4'],
+    ['E4', 'A4', 'B4', 'E5', 'F#5', 'E5', 'B4', 'A4'],
+    ['D4', 'A4', 'D5', 'F#5', 'A5', 'F#5', 'D5', 'A4']
+  ];
+  const PLUCK_PARTIALS = [
+    { mult: 1, relGain: 1.0, tau: 0.9 },
+    { mult: 2, relGain: 0.18, tau: 0.35 },
+    { mult: 4, relGain: 0.04, tau: 0.15 }
+  ];
+  const PAD_VOICES = [
+    { freq: 146.85, gain: 0.1, driftHz: 0.2, driftRate: 0.05, swellRate: 0.05, swellDepth: 0.3, swellPhase: 0 },
+    { freq: 220.0, gain: 0.08, driftHz: 0.2, driftRate: 0.1, swellRate: 0.05, swellDepth: 0.3, swellPhase: 2.0 },
+    { freq: 329.65, gain: 0.05, driftHz: 0.2, driftRate: 0.15, swellRate: 0.05, swellDepth: 0.3, swellPhase: 4.0 }
+  ];
+
+  function loopQuantizeFreq(hz) {
+    return Math.round(hz * LOOP_SEC) / LOOP_SEC;
+  }
+
+  function noteNameToFreq(name) {
+    const octave = parseInt(name.slice(-1), 10);
+    const pitch = name.slice(0, -1);
+    const semitone = NOTE_TO_SEMITONE[pitch] + 12 * (octave - 4);
+    return loopQuantizeFreq(440 * Math.pow(2, semitone / 12));
+  }
+
+  function arpVelocityForStep(stepInBar) {
+    if (stepInBar === 0) return 1.0;
+    if (stepInBar % 2 === 0) return 0.75;
+    return 0.6;
+  }
+
+  function noteNameForStep(globalStep) {
+    const bar = Math.floor(globalStep / 8);
+    const stepInBar = globalStep % 8;
+    return ARP_PATTERN[bar][stepInBar];
+  }
+
   class CelestialSoundscape {
     constructor() {
       this.ctx = null;
       this.isPlaying = false;
       this.masterGain = null;
-      this.oscillators = [];
-      this.filter = null;
+      this.padOscillators = [];
+      this.arpInput = null;
+      this.schedulerTimer = null;
+      this.currentStep = 0;
+      this.nextStepTime = 0;
+      this.loopAnchor = 0;
+    }
+
+    _connectSwellVoice(osc, voiceGain, cfg) {
+      const { ctx } = this;
+      const rate = loopQuantizeFreq(cfg.swellRate);
+      voiceGain.gain.setValueAtTime(cfg.gain, ctx.currentTime);
+
+      const swellLfo = ctx.createOscillator();
+      swellLfo.type = 'sine';
+      swellLfo.frequency.setValueAtTime(rate, ctx.currentTime);
+      const swellMod = ctx.createGain();
+      swellMod.gain.setValueAtTime(cfg.gain * cfg.swellDepth, ctx.currentTime);
+      swellLfo.connect(swellMod);
+      swellMod.connect(voiceGain.gain);
+      const phaseOffset = cfg.swellPhase / (2 * Math.PI * rate);
+      const swellStart = Math.max(0, ctx.currentTime - phaseOffset);
+      swellLfo.start(swellStart);
+
+      const driftLfo = ctx.createOscillator();
+      driftLfo.type = 'sine';
+      driftLfo.frequency.setValueAtTime(loopQuantizeFreq(cfg.driftRate), ctx.currentTime);
+      const driftMod = ctx.createGain();
+      driftMod.gain.setValueAtTime(cfg.driftHz, ctx.currentTime);
+      driftLfo.connect(driftMod);
+      driftMod.connect(osc.frequency);
+      driftLfo.start();
+
+      osc.frequency.setValueAtTime(cfg.freq, ctx.currentTime);
+      osc.connect(voiceGain);
+      osc.start();
+      this.padOscillators.push(osc, swellLfo, driftLfo);
+    }
+
+    _buildPingPong(input, timeSec, feedback, loopLpHz, wet) {
+      const { ctx } = this;
+      const delayL = ctx.createDelay(2);
+      const delayR = ctx.createDelay(2);
+      delayL.delayTime.setValueAtTime(timeSec, ctx.currentTime);
+      delayR.delayTime.setValueAtTime(timeSec, ctx.currentTime);
+
+      const lpL = ctx.createBiquadFilter();
+      lpL.type = 'lowpass';
+      lpL.frequency.setValueAtTime(loopLpHz, ctx.currentTime);
+      lpL.Q.setValueAtTime(BQ_LP_Q, ctx.currentTime);
+
+      const lpR = ctx.createBiquadFilter();
+      lpR.type = 'lowpass';
+      lpR.frequency.setValueAtTime(loopLpHz, ctx.currentTime);
+      lpR.Q.setValueAtTime(BQ_LP_Q, ctx.currentTime);
+
+      const fbToL = ctx.createGain();
+      const fbToR = ctx.createGain();
+      fbToL.gain.setValueAtTime(feedback, ctx.currentTime);
+      fbToR.gain.setValueAtTime(feedback, ctx.currentTime);
+
+      const wetL = ctx.createGain();
+      const wetR = ctx.createGain();
+      wetL.gain.setValueAtTime(wet, ctx.currentTime);
+      wetR.gain.setValueAtTime(wet, ctx.currentTime);
+
+      input.connect(delayL);
+      delayL.connect(lpL);
+      lpL.connect(fbToR);
+      fbToR.connect(delayR);
+      delayR.connect(lpR);
+      lpR.connect(fbToL);
+      fbToL.connect(delayL);
+      lpL.connect(wetL);
+      lpR.connect(wetR);
+
+      return { wetL, wetR };
     }
 
     init() {
@@ -29,65 +152,151 @@
       if (!AudioCtx) return;
       this.ctx = new AudioCtx();
 
-      // Master output gain for ambient continuous drone chords
       this.masterGain = this.ctx.createGain();
-      // Sound stays silent until the visitor turns it on.
       const initialGain = this.isPlaying ? 0.35 : 0;
       this.masterGain.gain.setValueAtTime(initialGain, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
 
-      // Dedicated chime output gain connected directly to destination
-      // Volume remains perfectly stable and constant, never dropping off as user scrolls
       this.chimeGain = this.ctx.createGain();
       this.chimeGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
       this.chimeGain.connect(this.ctx.destination);
 
-      // Low pass resonant filter for soft celestial warmth
-      this.filter = this.ctx.createBiquadFilter();
-      this.filter.type = 'lowpass';
-      this.filter.frequency.setValueAtTime(650, this.ctx.currentTime);
-      this.filter.Q.setValueAtTime(3.5, this.ctx.currentTime);
-      this.filter.connect(this.masterGain);
+      const outputGain = this.ctx.createGain();
+      outputGain.gain.setValueAtTime(SOUNDSCAPE_OUTPUT_GAIN, this.ctx.currentTime);
 
-      // Celestial Drone Chords (D Minor Harmonic: D2, A2, D3, F3, A3, C#4)
-      const freqs = [73.42, 110.00, 146.83, 174.61, 220.00, 277.18];
-    
-      freqs.forEach((freq, idx) => {
+      const padBus = this.ctx.createGain();
+      padBus.gain.setValueAtTime(1, this.ctx.currentTime);
+
+      const padLp = this.ctx.createBiquadFilter();
+      padLp.type = 'lowpass';
+      padLp.frequency.setValueAtTime(1200, this.ctx.currentTime);
+      padLp.Q.setValueAtTime(BQ_LP_Q, this.ctx.currentTime);
+      padBus.connect(padLp);
+
+      PAD_VOICES.forEach((cfg) => {
         const osc = this.ctx.createOscillator();
-        const oscGain = this.ctx.createGain();
-
-        osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-
-        // Subtle slow pitch drifting LFO
-        const lfo = this.ctx.createOscillator();
-        const lfoGain = this.ctx.createGain();
-        lfo.frequency.setValueAtTime(0.08 + idx * 0.03, this.ctx.currentTime);
-        lfoGain.gain.setValueAtTime(1.5, this.ctx.currentTime);
-        lfo.connect(osc.frequency);
-        lfo.start();
-
-        const baseAmp = 0.12 / freqs.length;
-        oscGain.gain.setValueAtTime(baseAmp, this.ctx.currentTime);
-
-        osc.connect(oscGain);
-        oscGain.connect(this.filter);
-        osc.start();
-        this.oscillators.push(osc);
+        osc.type = 'sine';
+        const voiceGain = this.ctx.createGain();
+        this._connectSwellVoice(osc, voiceGain, cfg);
+        voiceGain.connect(padBus);
       });
 
-      // Automatically resume context on first real user gesture anywhere on the page
+      this.arpInput = this.ctx.createGain();
+      this.arpInput.gain.setValueAtTime(1, this.ctx.currentTime);
+
+      const arpLp = this.ctx.createBiquadFilter();
+      arpLp.type = 'lowpass';
+      arpLp.frequency.setValueAtTime(4500, this.ctx.currentTime);
+      arpLp.Q.setValueAtTime(BQ_LP_Q, this.ctx.currentTime);
+      this.arpInput.connect(arpLp);
+
+      const dryMix = this.ctx.createGain();
+      dryMix.gain.setValueAtTime(1, this.ctx.currentTime);
+      arpLp.connect(dryMix);
+      padLp.connect(dryMix);
+
+      const { wetL, wetR } = this._buildPingPong(arpLp, 0.9375, 0.35, 2500, 0.28);
+
+      const leftOut = this.ctx.createGain();
+      const rightOut = this.ctx.createGain();
+      dryMix.connect(leftOut);
+      dryMix.connect(rightOut);
+      wetL.connect(leftOut);
+      wetR.connect(rightOut);
+
+      const stereo = this.ctx.createChannelMerger(2);
+      leftOut.connect(stereo, 0, 0);
+      rightOut.connect(stereo, 0, 1);
+      stereo.connect(outputGain);
+      outputGain.connect(this.masterGain);
+
       const unlockAudio = () => {
         if (this.ctx && this.ctx.state === 'suspended') {
           this.ctx.resume().catch(() => {});
         }
-        ['click', 'pointerdown', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(ev => {
+        ['click', 'pointerdown', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach((ev) => {
           window.removeEventListener(ev, unlockAudio, true);
         });
       };
-      ['click', 'pointerdown', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(ev => {
+      ['click', 'pointerdown', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach((ev) => {
         window.addEventListener(ev, unlockAudio, { passive: true, capture: true });
       });
+    }
+
+    _schedulePluck(t0, noteName, velocity) {
+      if (!this.ctx || !this.arpInput) return;
+      const freq = noteNameToFreq(noteName);
+      const peak = 0.13 * velocity;
+      const stopAt = t0 + 4;
+      const attackEnd = t0 + 0.004;
+
+      PLUCK_PARTIALS.forEach(({ mult, relGain, tau }) => {
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq * mult, t0);
+        const partialPeak = peak * relGain;
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(partialPeak, attackEnd);
+        g.gain.setTargetAtTime(0, attackEnd, tau);
+        osc.connect(g);
+        g.connect(this.arpInput);
+        osc.start(t0);
+        osc.stop(stopAt);
+        osc.onended = () => {
+          try {
+            osc.disconnect();
+            g.disconnect();
+          } catch (e) { /* already torn down */ }
+        };
+      });
+    }
+
+    _alignSchedulerToNow(now) {
+      if (this.nextStepTime < now - 0.05) {
+        const elapsed = now - this.loopAnchor;
+        const posInLoop = ((elapsed % LOOP_SEC) + LOOP_SEC) % LOOP_SEC;
+        this.currentStep = Math.floor(posInLoop / ARP_STEP_SEC) % ARP_STEPS;
+        this.nextStepTime = this.loopAnchor + (Math.floor(elapsed / ARP_STEP_SEC) + 1) * ARP_STEP_SEC;
+        if (this.nextStepTime < now) {
+          this.nextStepTime = now + 0.02;
+        }
+      }
+    }
+
+    _schedulerTick() {
+      if (!this.ctx || !this.isPlaying) return;
+      const now = this.ctx.currentTime;
+      const lookahead = 1.5;
+      this._alignSchedulerToNow(now);
+
+      while (this.nextStepTime < now + lookahead) {
+        if (this.nextStepTime >= now - 0.02) {
+          const note = noteNameForStep(this.currentStep);
+          const stepInBar = this.currentStep % 8;
+          const vel = arpVelocityForStep(stepInBar);
+          this._schedulePluck(this.nextStepTime, note, vel);
+        }
+        this.currentStep = (this.currentStep + 1) % ARP_STEPS;
+        this.nextStepTime += ARP_STEP_SEC;
+      }
+    }
+
+    _startScheduler() {
+      this._stopScheduler();
+      const now = this.ctx.currentTime;
+      this.loopAnchor = now;
+      this.currentStep = 0;
+      this.nextStepTime = now + 0.05;
+      this.schedulerTimer = window.setInterval(() => this._schedulerTick(), 100);
+      this._schedulerTick();
+    }
+
+    _stopScheduler() {
+      if (this.schedulerTimer != null) {
+        window.clearInterval(this.schedulerTimer);
+        this.schedulerTimer = null;
+      }
     }
 
     toggle() {
@@ -104,14 +313,15 @@
       if (this.isPlaying) {
         this.masterGain.gain.cancelScheduledValues(now);
         this.masterGain.gain.linearRampToValueAtTime(0.35, now + 2.5);
+        this._startScheduler();
       } else {
+        this._stopScheduler();
         this.masterGain.gain.cancelScheduledValues(now);
         this.masterGain.gain.linearRampToValueAtTime(0, now + 1.2);
       }
       return this.isPlaying;
     }
 
-    // Trigger subtle crystal harp chime on section transitions (exact original pure warm sine D5 harmonic)
     playChime(pitchMultiplier = 1) {
       if (!this.ctx || !this.isPlaying) return;
       if (this.ctx.state === 'suspended') {
@@ -123,7 +333,7 @@
         const noteGain = this.ctx.createGain();
 
         chimeOsc.type = 'sine';
-        chimeOsc.frequency.setValueAtTime(587.33 * pitchMultiplier, now); // D5
+        chimeOsc.frequency.setValueAtTime(587.33 * pitchMultiplier, now);
         noteGain.gain.setValueAtTime(0.08, now);
         noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
 
