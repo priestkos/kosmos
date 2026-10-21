@@ -341,7 +341,7 @@
         noteGain.connect(this.chimeGain || this.ctx.destination);
         chimeOsc.start(now);
         chimeOsc.stop(now + 2.8);
-      } catch (e) {}
+      } catch (e) { /* Web Audio node may already be disconnected */ }
     }
   }
 
@@ -368,14 +368,6 @@
     sphere: new Float32Array(PARTICLE_COUNT * 3)
   };
 
-  const SHAPE_NAMES = {
-    fox: 'CELESTIAL EMBLEM',
-    harp: 'CELESTIAL HARP',
-    fan: 'NINE TAILS FAN',
-    prism: 'STARLIGHT PRISM',
-    sphere: 'ASTRAL VORTEX'
-  };
-
   let activeShapeKey = 'fox';
   const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
   let scrollProgress = 0;
@@ -385,7 +377,7 @@
   function generateFox(buf) {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const idx = i * 3;
-      let x = 0, y = 0, z = (Math.random() - 0.5) * 16;
+      let x = 0, y = 0, z;
 
       if (i < PARTICLE_COUNT * 0.44) {
         // --- 1. SWEEPING CURVED FOX TAIL (Left flank: x: -55 to -8, y: -75 to +68) ---
@@ -465,7 +457,7 @@
   function generateHarp(buf) {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const idx = i * 3;
-      let x = 0, y = 0, z = (Math.random() - 0.5) * 35;
+      let x = 0, y = 0, z;
 
       if (i < PARTICLE_COUNT * 0.45) {
         // Sweeping Curved Harp / Bow Frame
@@ -857,7 +849,6 @@
     // centered in the viewport, all starting from the bottom-right and flying to the top-left.
     let currentOrbitIndex = 0;
     let targetOrbitIndex = 0;
-    let sphereOpacity = 0;
 
     function updateTraitsHubScroll() {
       if (traitsStackedMQ.matches) return;
@@ -891,8 +882,6 @@
         // Entering Act 4: smoothly fade out between 0.92 and 1.0
         targetSphereAlpha = Math.max(0, 1 - (rawProgress - 0.92) / 0.08);
       }
-      sphereOpacity = targetSphereAlpha;
-
       if (sphereEl) {
         sphereEl.style.opacity = targetSphereAlpha.toFixed(2);
         sphereEl.style.pointerEvents = targetSphereAlpha > 0.3 ? 'auto' : 'none';
@@ -1232,8 +1221,8 @@
         const dy = tgt.y - cy;
         const dist = Math.hypot(dx, dy);
         if (dist < 20) return; // Only skip if right at center
-        const normalX = dist > 0 ? -dy / dist : 0;
-        const normalY = dist > 0 ? dx / dist : 1;
+        const normalX = -dy / dist;
+        const normalY = dx / dist;
 
         // Core thread + glowing outer halo
         [
@@ -1490,6 +1479,17 @@
   // =========================================================================
   // 6c. DYNAMIC EXHIBIT NUMBERING
   // =========================================================================
+  const GALLERY_THUMB_PATH = /^assets\/images\/thumbs\/\d+\.webp$/;
+  const GALLERY_IMAGE_PATH = /^assets\/images\/\d+\.jpg$/;
+
+  function safeGalleryAssetUrl(raw, pattern) {
+    if (typeof raw !== 'string' || raw.length === 0 || raw.length > 200) return null;
+    if (raw.includes('..') || /[\s<>"'`]/.test(raw) || /^(javascript|data|vbscript):/i.test(raw)) {
+      return null;
+    }
+    return pattern.test(raw) ? raw : null;
+  }
+
   function initDynamicExhibits() {
     const tiles = Array.from(document.querySelectorAll('.gallery-tile'));
     tiles.forEach((tile, idx) => {
@@ -1504,7 +1504,11 @@
         infoEl.className = 'tile-info';
         tile.appendChild(infoEl);
       }
-      infoEl.innerHTML = `<span class="tile-idx">EXHIBIT ${numStr}</span>`;
+      infoEl.replaceChildren();
+      const badge = document.createElement('span');
+      badge.className = 'tile-idx';
+      badge.textContent = `EXHIBIT ${numStr}`;
+      infoEl.appendChild(badge);
     });
   }
 
@@ -1514,7 +1518,8 @@
     if (!document.documentElement.classList.contains('age-ok')) return;
     document.querySelectorAll('.gallery-tile img[data-src]').forEach((img) => {
       if (img.getAttribute('src')) return;
-      img.src = img.getAttribute('data-src');
+      const thumbSrc = safeGalleryAssetUrl(img.getAttribute('data-src'), GALLERY_THUMB_PATH);
+      if (thumbSrc) img.src = thumbSrc;
     });
   }
 
@@ -1556,11 +1561,11 @@
       currentIndex = idx;
 
       const tile = tiles[currentIndex];
-      const imgSrc = tile.getAttribute('data-img');
+      const imgSrc = safeGalleryAssetUrl(tile.getAttribute('data-img'), GALLERY_IMAGE_PATH);
       const numStr = String(currentIndex + 1).padStart(2, '0');
       const idxText = `EXHIBIT ${numStr}`;
 
-      lbImg.src = imgSrc;
+      if (imgSrc) lbImg.src = imgSrc;
       lbIdx.textContent = idxText;
 
       modal.classList.add('open');
@@ -1823,7 +1828,6 @@
     initWavyThreads();
     initSphereEmbers();
     initGlassBlockEmbers();
-    initDynamicExhibits();
     initTraitSelector();
     initLightbox();
     initAudioPill();
