@@ -148,7 +148,7 @@ function P(x,y,z){
 }
 const VIEW = [0, SP, -CP]; // toward viewer, in rotated frame
 function facing(n){ // n = world normal
-  const xr = n[0]*cy_ - n[2]*sy_, zr = n[0]*sy_ + n[2]*cy_;
+  const zr = n[0]*sy_ + n[2]*cy_;
   return n[1]*VIEW[1] + zr*VIEW[2] > 0.0001 || false;
 }
 
