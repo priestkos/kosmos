@@ -13,7 +13,7 @@
    - Pointer damping parallax and depth tracking (`camera.position.z`).
 
 2. **Aetheric Synthesizer Soundscape (Web Audio API)**
-   - Procedural D-minor harmonic drone with multi-oscillator LFO modulation and resonant low-pass warmth.
+   - Procedural D-major-pentatonic music-box arpeggio (96 BPM eighths, 20 s loop) over a soft swelling pad, with ping-pong echo and section chimes.
    - Celestial crystal chimes triggered on section transitions and interactive clicks.
    - Interactive pill toggle with live audio wave animation.
 
