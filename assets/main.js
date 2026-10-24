@@ -1710,8 +1710,31 @@
     };
 
     const focusWithRing = (el) => {
-      el.focus({ focusVisible: true });
+      if (!el) return;
+      try {
+        el.focus({ focusVisible: true });
+      } catch (e) {
+        el.focus();
+      }
     };
+
+    const onEnter = () => {
+      try { localStorage.setItem('kosmos-age-ok', '1'); } catch (e) {}
+      document.documentElement.classList.add('age-ok');
+      disarmTrap();
+      gate.hidden = true;
+      releasePage();
+      loadGalleryThumbs();
+      initSoundAnnouncement(pill);
+      restorePageFocus();
+    };
+
+    const onLeave = () => {
+      window.location.replace('404.html');
+    };
+
+    enterBtn.addEventListener('click', onEnter);
+    leaveBtn.addEventListener('click', onLeave);
 
     let trapOn = false;
 
@@ -1800,21 +1823,6 @@
     focusWithRing(enterBtn);
     requestAnimationFrame(placeInitialFocus);
     window.addEventListener('load', placeInitialFocus);
-
-    enterBtn.addEventListener('click', () => {
-      try { localStorage.setItem('kosmos-age-ok', '1'); } catch (e) {}
-      document.documentElement.classList.add('age-ok');
-      disarmTrap();
-      gate.hidden = true;
-      releasePage();
-      loadGalleryThumbs();
-      initSoundAnnouncement(pill);
-      restorePageFocus();
-    });
-
-    leaveBtn.addEventListener('click', () => {
-      window.location.replace('https://www.google.com/');
-    });
   }
 
   // =========================================================================
