@@ -1828,18 +1828,26 @@
   // =========================================================================
   // INITIALIZATION ON DOM READY
   // =========================================================================
+  function safeInit(label, fn) {
+    try {
+      fn();
+    } catch (err) {
+      console.error(`[kosmos] ${label} failed:`, err);
+    }
+  }
+
   function runInit() {
-    initThree();
-    animate();
-    initScrollytelling();
-    init3DTiltAndSplitDepth();
-    initWavyThreads();
-    initSphereEmbers();
-    initGlassBlockEmbers();
-    initTraitSelector();
-    initLightbox();
-    initAudioPill();
     initAgeGate();
+    safeInit('initThree', initThree);
+    safeInit('animate', animate);
+    safeInit('initScrollytelling', initScrollytelling);
+    safeInit('init3DTiltAndSplitDepth', init3DTiltAndSplitDepth);
+    safeInit('initWavyThreads', initWavyThreads);
+    safeInit('initSphereEmbers', initSphereEmbers);
+    safeInit('initGlassBlockEmbers', initGlassBlockEmbers);
+    safeInit('initTraitSelector', initTraitSelector);
+    safeInit('initLightbox', initLightbox);
+    safeInit('initAudioPill', initAudioPill);
   }
 
   if (document.readyState === 'loading') {
