@@ -11,6 +11,20 @@
 (function () {
   'use strict';
 
+  function focusWithRing(el) {
+    if (!el) return;
+    try {
+      el.focus({ focusVisible: true });
+    } catch (e) {
+      el.focus();
+    }
+  }
+
+  function exhibitAltText(numStr, { thumbnail = false } = {}) {
+    const label = `Portrait archive exhibit ${numStr}`;
+    return thumbnail ? `${label} thumbnail` : label;
+  }
+
   // =========================================================================
   // 1. WEB AUDIO API SYNTHESIZER (Music-box arpeggio ambient loop & harp chimes)
   // =========================================================================
@@ -1509,6 +1523,9 @@
       badge.className = 'tile-idx';
       badge.textContent = `EXHIBIT ${numStr}`;
       infoEl.appendChild(badge);
+
+      const thumb = tile.querySelector('.tile-inner');
+      if (thumb) thumb.alt = exhibitAltText(numStr, { thumbnail: true });
     });
   }
 
@@ -1552,31 +1569,96 @@
     const backdrop = document.querySelector('.lightbox-backdrop');
 
     const tiles = Array.from(document.querySelectorAll('.gallery-tile'));
+    const focusables = [closeBtn, prevBtn, nextBtn].filter(Boolean);
 
     let currentIndex = 0;
+    let triggerTile = null;
+    let trapOn = false;
 
-    function openAt(idx) {
+    function setClosedState() {
+      modal.inert = true;
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function setOpenState() {
+      modal.inert = false;
+      modal.removeAttribute('aria-hidden');
+    }
+
+    function onTrapKeydown(event) {
+      if (!trapOn || event.key !== 'Tab' || !modal.classList.contains('open')) return;
+      const active = document.activeElement;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const inside = modal.contains(active);
+      if (event.shiftKey) {
+        if (!inside || active === first) {
+          event.preventDefault();
+          focusWithRing(last);
+        }
+      } else if (!inside || active === last) {
+        event.preventDefault();
+        focusWithRing(first);
+      }
+    }
+
+    function pullFocusIntoLightbox() {
+      window.setTimeout(() => {
+        if (!trapOn || !modal.classList.contains('open')) return;
+        if (modal.contains(document.activeElement)) return;
+        focusWithRing(closeBtn || focusables[0]);
+      }, 0);
+    }
+
+    function onTrapFocusIn(event) {
+      if (!trapOn) return;
+      if (modal.contains(event.target)) return;
+      pullFocusIntoLightbox();
+    }
+
+    function armTrap() {
+      if (trapOn) return;
+      trapOn = true;
+      document.addEventListener('keydown', onTrapKeydown);
+      document.addEventListener('focusin', onTrapFocusIn);
+    }
+
+    function disarmTrap() {
+      trapOn = false;
+      document.removeEventListener('keydown', onTrapKeydown);
+      document.removeEventListener('focusin', onTrapFocusIn);
+    }
+
+    function openAt(idx, { fromNav = false } = {}) {
       if (idx < 0) idx = tiles.length - 1;
       if (idx >= tiles.length) idx = 0;
       currentIndex = idx;
 
       const tile = tiles[currentIndex];
+      if (!fromNav) triggerTile = tile;
       const imgSrc = safeGalleryAssetUrl(tile.getAttribute('data-img'), GALLERY_IMAGE_PATH);
       const numStr = String(currentIndex + 1).padStart(2, '0');
       const idxText = `EXHIBIT ${numStr}`;
 
       if (imgSrc) lbImg.src = imgSrc;
+      lbImg.alt = exhibitAltText(numStr);
       lbIdx.textContent = idxText;
 
+      setOpenState();
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
+      armTrap();
+      if (!fromNav) focusWithRing(closeBtn || modal);
 
       if (window.soundscape) window.soundscape.playChime(1.4);
     }
 
     function close() {
+      disarmTrap();
       modal.classList.remove('open');
       document.body.style.overflow = '';
+      setClosedState();
+      if (triggerTile) focusWithRing(triggerTile);
     }
 
     tiles.forEach((tile, idx) => {
@@ -1590,11 +1672,11 @@
     if (backdrop) backdrop.addEventListener('click', close);
     if (prevBtn) {
       prevBtn.setAttribute('aria-label', 'Previous exhibit');
-      prevBtn.addEventListener('click', () => openAt(currentIndex - 1));
+      prevBtn.addEventListener('click', () => openAt(currentIndex - 1, { fromNav: true }));
     }
     if (nextBtn) {
       nextBtn.setAttribute('aria-label', 'Next exhibit');
-      nextBtn.addEventListener('click', () => openAt(currentIndex + 1));
+      nextBtn.addEventListener('click', () => openAt(currentIndex + 1, { fromNav: true }));
     }
 
     // Touch swipe: left/right to change image, on phones and tablets
@@ -1610,16 +1692,18 @@
       const dy = e.changedTouches[0].clientY - touchY;
       touchX = touchY = null;
       if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-        openAt(currentIndex + (dx < 0 ? 1 : -1));
+        openAt(currentIndex + (dx < 0 ? 1 : -1), { fromNav: true });
       }
     }, { passive: true });
 
     document.addEventListener('keydown', (e) => {
       if (!modal.classList.contains('open')) return;
       if (e.key === 'Escape') close();
-      else if (e.key === 'ArrowLeft') openAt(currentIndex - 1);
-      else if (e.key === 'ArrowRight') openAt(currentIndex + 1);
+      else if (e.key === 'ArrowLeft') openAt(currentIndex - 1, { fromNav: true });
+      else if (e.key === 'ArrowRight') openAt(currentIndex + 1, { fromNav: true });
     });
+
+    setClosedState();
   }
 
   // =========================================================================
@@ -1709,15 +1793,6 @@
       });
     };
 
-    const focusWithRing = (el) => {
-      if (!el) return;
-      try {
-        el.focus({ focusVisible: true });
-      } catch (e) {
-        el.focus();
-      }
-    };
-
     const onEnter = () => {
       try { localStorage.setItem('kosmos-age-ok', '1'); } catch (e) {}
       document.documentElement.classList.add('age-ok');
@@ -1730,7 +1805,7 @@
     };
 
     const onLeave = () => {
-      window.location.replace('404.html');
+      window.location.replace('https://www.google.com/');
     };
 
     enterBtn.addEventListener('click', onEnter);
