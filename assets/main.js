@@ -1931,4 +1931,9 @@
     runInit();
   }
 
+  // Test hook: the node tests run this file in a vm that defines `module`; browsers do not.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { noteNameToFreq, noteNameForStep, safeGalleryAssetUrl, GALLERY_IMAGE_PATH, GALLERY_THUMB_PATH };
+  }
+
 })();
