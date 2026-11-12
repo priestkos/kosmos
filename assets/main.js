@@ -373,6 +373,7 @@
   // 2. THREE.JS 3D CONSTELLATION ENGINE
   // =========================================================================
   const PARTICLE_COUNT = 2200;
+  const MAX_LINE_VERTS = 680 * 2 * 3; // 680 line segments, 2 vertices of xyz each
   let scene, camera, renderer;
   let pointsGeometry, pointsMaterial, particleSystem;
   let linesGeometry, linesMaterial, lineSegments;
@@ -581,7 +582,7 @@
     scene.fog = new THREE.FogExp2(0x07080c, 0.0028);
 
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1500);
-    camera.position.set(0, 0, 140);
+    camera.position.set(0, 0, 150);
 
     renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -671,8 +672,7 @@
     scene.add(particleSystem);
 
     // Luminous Connecting Filaments (Line Segments)
-    const MAX_LINE_SEGS = 680;
-    const linePos = new Float32Array(MAX_LINE_SEGS * 2 * 3);
+    const linePos = new Float32Array(MAX_LINE_VERTS);
     linesGeometry = new THREE.BufferGeometry();
     linesGeometry.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
 
@@ -766,7 +766,6 @@
       const lineAttr = linesGeometry.attributes.position;
       const lPos = lineAttr.array;
       let lIdx = 0;
-      const MAX_LINE_VERTS = 680 * 2 * 3;
       const distThresholdSq = 360;
 
       // Sample a subset for performance
@@ -799,18 +798,9 @@
       }
       lineAttr.needsUpdate = true;
 
-      camera.position.z = 150;
       camera.position.x = mouse.x * 12;
       camera.position.y = mouse.y * 8;
       camera.lookAt(0, 0, 0);
-
-      if (pointsMaterial) {
-        pointsMaterial.size = 2.1;
-        pointsMaterial.opacity = 0.34;
-      }
-      if (linesMaterial) {
-        linesMaterial.opacity = 0.12;
-      }
     }
 
     if (renderer && scene && camera) {
