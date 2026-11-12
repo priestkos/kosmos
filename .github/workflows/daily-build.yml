@@ -6,7 +6,7 @@ on:
   workflow_dispatch:         # lets you run it by hand from the Actions tab
 
 permissions:
-  contents: write            # needed to push the daily commit
+  contents: write            # needed to push a commit when a build step changes files
 
 jobs:
   build:
@@ -15,18 +15,15 @@ jobs:
       - uses: actions/checkout@v4
 
       # Add your real build step here if the site ever needs one
-      # (e.g. npm ci && npm run build). The site is static right now.
-
-      - name: Record build timestamp
-        run: |
-          echo "Last automated build: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > .last-build
-          echo "Runs daily via .github/workflows/daily-build.yml" >> .last-build
+      # (e.g. npm ci && npm run build). The site is static right now, so
+      # no step writes files and no commit is made. No timestamp file:
+      # a timestamp-only commit is noise and redeploys Pages for nothing.
 
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .last-build
+          git add -A
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
