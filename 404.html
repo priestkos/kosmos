@@ -104,6 +104,9 @@ const ctx = cv.getContext('2d');
 const hud = document.getElementById('hud');
 const themeBtn = document.getElementById('theme');
 const root = document.documentElement;
+// OS "reduce motion": draw still frames on demand instead of a frame loop.
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function redraw(){ if (REDUCE) requestAnimationFrame(frame); }
 
 /* ---------- palette ---------- */
 const PAL = {
@@ -118,6 +121,7 @@ function setTheme(t){
   themeBtn.textContent = t === 'dark' ? 'Dark' : 'Light';
   try{ localStorage.setItem('carrier404-theme', t); }catch(e){}
   buildStreaks();
+  redraw();
 }
 themeBtn.addEventListener('click', () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
 
@@ -137,6 +141,7 @@ function resize(){
   CX = W*0.535; CY = H*0.636;
   if (W < 640){ S = W/118; CY = H*0.70; }
   buildStreaks();
+  redraw();
 }
 
 let cy_ = 1, sy_ = 0, bob = 0;
@@ -286,6 +291,7 @@ function setCounts(d, l, persist){
     localStorage.setItem('carrier404-deck', deckCount);
     localStorage.setItem('carrier404-launch', launchCount);
   }catch(e){} }
+  redraw();
 }
 for (const b of ctlButtons) b.addEventListener('click', () => {
   const step = Number(b.dataset.step);
@@ -501,7 +507,7 @@ function frame(now){
   }
   if (txt !== lastHud){ hud.textContent = txt; lastHud = txt; }
 
-  requestAnimationFrame(frame);
+  if (!REDUCE) requestAnimationFrame(frame);
 }
 
 /* ---------- input ---------- */
@@ -511,12 +517,14 @@ cv.addEventListener('pointermove', e => {
   const dx = e.clientX - lastX; lastX = e.clientX;
   const d = -dx * 0.0065;
   yaw += d; yawVel = d; lastMove = performance.now();
+  redraw();
 });
 const end = e => { if (!dragging) return; dragging = false; cv.classList.remove('dragging'); lastMove = performance.now(); };
 cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
 addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft'){ yawVel = 0.02; lastMove = performance.now(); }
   if (e.key === 'ArrowRight'){ yawVel = -0.02; lastMove = performance.now(); }
+  redraw();
 });
 addEventListener('resize', resize);
 

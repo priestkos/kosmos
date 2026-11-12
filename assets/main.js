@@ -11,6 +11,9 @@
 (function () {
   'use strict';
 
+  // OS "reduce motion": render still frames, no particle morph, parallax, tilt or ember loops.
+  const REDUCE_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
   function focusWithRing(el) {
     if (!el) return;
     try {
@@ -681,7 +684,7 @@
     scene.add(lineSegments);
 
     window.addEventListener('resize', onWindowResize, false);
-    document.addEventListener('mousemove', onMouseMove, false);
+    if (!REDUCE_MOTION) document.addEventListener('mousemove', onMouseMove, false);
   }
 
   function onWindowResize() {
@@ -689,6 +692,7 @@
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    if (REDUCE_MOTION) animate(); // resizing clears the canvas and no loop redraws it
   }
 
   function onMouseMove(e) {
@@ -718,13 +722,14 @@
     if (!shapes[shapeKey] || activeShapeKey === shapeKey) return;
     activeShapeKey = shapeKey;
     targetPositions = shapes[shapeKey];
+    if (REDUCE_MOTION) animate(); // jump straight to the new shape
   }
 
   // --- Main Animation Loop ---
   let animClock = 0;
   function animate() {
-    requestAnimationFrame(animate);
-    animClock += 0.012;
+    if (!REDUCE_MOTION) requestAnimationFrame(animate);
+    if (!REDUCE_MOTION) animClock += 0.012;
 
     // Smooth pointer damping
     mouse.x += (mouse.targetX - mouse.x) * 0.06;
@@ -734,7 +739,7 @@
       // Morph particles toward target formation
       const posAttr = pointsGeometry.attributes.position;
       const count = PARTICLE_COUNT * 3;
-      const lerpSpeed = 0.048;
+      const lerpSpeed = REDUCE_MOTION ? 1 : 0.048;
 
       for (let i = 0; i < count; i += 3) {
         currentPositions[i] += (targetPositions[i] - currentPositions[i]) * lerpSpeed;
@@ -742,7 +747,7 @@
         currentPositions[i + 2] += (targetPositions[i + 2] - currentPositions[i + 2]) * lerpSpeed;
 
         // Subtle organic breathing foxfire flutter
-        currentPositions[i + 1] += Math.sin(animClock * 2.5 + i) * 0.14;
+        if (!REDUCE_MOTION) currentPositions[i + 1] += Math.sin(animClock * 2.5 + i) * 0.14;
       }
       posAttr.needsUpdate = true;
 
@@ -828,7 +833,7 @@
       }
 
       // Parallax elements with [data-parallax]
-      document.querySelectorAll('[data-parallax]').forEach(el => {
+      if (!REDUCE_MOTION) document.querySelectorAll('[data-parallax]').forEach(el => {
         const factor = parseFloat(el.getAttribute('data-parallax')) || 0.1;
         const rect = el.getBoundingClientRect();
         const offset = (rect.top - window.innerHeight * 0.5) * factor;
@@ -954,6 +959,7 @@
   // 4. INTERACTIVE 3D TILT & SPLIT DEPTH ENGINE
   // =========================================================================
   function init3DTiltAndSplitDepth() {
+    if (REDUCE_MOTION) return;
     // 1. Tilt Cards ([data-tilt])
     const tiltElements = document.querySelectorAll('[data-tilt]');
     tiltElements.forEach(el => {
@@ -1037,7 +1043,7 @@
     }));
 
     function drawSphereEmbers() {
-      requestAnimationFrame(drawSphereEmbers);
+      if (!REDUCE_MOTION) requestAnimationFrame(drawSphereEmbers);
       ctx.clearRect(0, 0, W, H);
 
       embers.forEach(p => {
@@ -1104,7 +1110,7 @@
     }));
 
     function drawBlockEmbers() {
-      requestAnimationFrame(drawBlockEmbers);
+      if (!REDUCE_MOTION) requestAnimationFrame(drawBlockEmbers);
       const W = canvas.width;
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);

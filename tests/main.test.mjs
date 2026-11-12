@@ -37,3 +37,15 @@ test("safeGalleryAssetUrl accepts only gallery image paths", () => {
 test("only visible canvases run frame loops (no hidden trait-thread canvas)", () => {
   assert.deepEqual(page.raf.map((f) => f.name).sort(), ["animate", "drawBlockEmbers", "drawSphereEmbers"]);
 });
+
+test("reduced motion: no frame loops, tilt or parallax listeners", () => {
+  const tilt = [];
+  const el = { addEventListener: (ev) => tilt.push(ev), querySelector: () => null };
+  const p = loadMain({ reduce: true, bySelector: { "[data-tilt]": [el] } });
+  assert.deepEqual(p.errors, []);
+  assert.deepEqual(p.raf.map((f) => f.name), []);
+  assert.deepEqual(tilt, []);
+  const normal = [];
+  loadMain({ bySelector: { "[data-tilt]": [{ ...el, addEventListener: (ev) => normal.push(ev) }] } });
+  assert.deepEqual(normal, ["mousemove", "mouseleave"]);
+});
