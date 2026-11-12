@@ -1314,56 +1314,6 @@ html.age-ok .age-gate {
   pointer-events: auto;
 }
 
-/* Background Compass Orbit Rings & Spoke Lines */
-.traits-orbit-svg {
-  display: none;
-}
-
-.orbit-ring {
-  fill: none;
-  stroke: rgba(245, 176, 65, 0.12);
-  stroke-width: 1;
-  stroke-dasharray: 4 6;
-}
-
-.ring-inner {
-  stroke: rgba(255, 42, 68, 0.22);
-  stroke-width: 1.5;
-  stroke-dasharray: 6 8;
-  animation: orbitRotateRev 90s linear infinite;
-  transform-origin: 500px 500px;
-}
-
-.ring-mid {
-  stroke: rgba(245, 176, 65, 0.16);
-  animation: orbitRotate 140s linear infinite;
-  transform-origin: 500px 500px;
-}
-
-.ring-outer {
-  stroke: rgba(255, 255, 255, 0.06);
-  stroke-dasharray: 2 10;
-}
-
-.orbit-axis {
-  stroke: rgba(255, 255, 255, 0.04);
-  stroke-width: 1;
-}
-
-.orbit-spoke {
-  display: none;
-}
-
-@keyframes orbitRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes orbitRotateRev {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
-}
-
 /* Central 3D Celestial Sphere: Wireframe Orb with Inner Embers */
 .traits-sphere-globe {
   position: relative;
