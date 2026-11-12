@@ -937,6 +937,16 @@
       updateActiveSection(targetId, shapeKey);
     }
 
+    // Landing on /#act-x: jump with the same nav offset as the nav links (the
+    // browser's own jump and scrollIntoView ignore the fixed nav). Retried after
+    // load, when images and fonts have settled the layout.
+    const jumpToHash = () => {
+      const id = window.location.hash.slice(1);
+      if (id && document.getElementById(id)) scrollToAct(id);
+    };
+    window.setTimeout(jumpToHash, 50);
+    window.addEventListener('load', () => window.setTimeout(jumpToHash, 150));
+
     // Rail Dot Click Handler
     railDots.forEach(dot => {
       dot.addEventListener('click', (e) => {

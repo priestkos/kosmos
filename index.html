@@ -463,23 +463,5 @@
 
   <!-- Constellation 3D Engine & Split Depth Controller -->
   <script src="assets/main.js"></script>
-
-  <!-- Auto-scroll helper for hash navigation -->
-  <script>
-    (function() {
-      function checkAndJump() {
-        const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
-        if (!hash) return;
-        const target = document.getElementById(hash);
-        if (!target) return;
-
-        target.scrollIntoView({ behavior: 'instant', block: 'start' });
-        window.dispatchEvent(new Event('scroll'));
-      }
-
-      window.addEventListener('DOMContentLoaded', () => setTimeout(checkAndJump, 50));
-      window.addEventListener('load', () => setTimeout(checkAndJump, 150));
-    })();
-  </script>
 </body>
 </html>

@@ -86,3 +86,18 @@ test("sound toggle ramps from the current gain, not the last scheduled event", (
   sound.toggle();                 // off mid-ramp
   assert.deepEqual(calls, [["cancel", 0.5], ["set", 0.07, 0.5], ["ramp", 0, 1.7]]);
 });
+
+test("landing on /#act-gallery scrolls with the fixed-nav offset", () => {
+  const scrolls = [];
+  const target = { getBoundingClientRect: () => ({ top: 1000 }), getAttribute: () => "sphere" };
+  const p = loadMain({
+    byId: { "act-gallery": target },
+    bySelector: { ".site-nav": stub({ offsetHeight: 88 }) },
+    extra: { location: { hash: "#act-gallery" }, scrollTo: (o) => scrolls.push(o.top) },
+  });
+  p.timers.splice(0).forEach((f) => f());
+  (p.listeners.load || []).forEach((f) => f());
+  p.timers.splice(0).forEach((f) => f());
+  assert.ok(scrolls.length > 0, "no jump");
+  assert.ok(scrolls.every((top) => top === 1000 - 88 - 12), String(scrolls));
+});
