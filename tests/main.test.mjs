@@ -1,7 +1,7 @@
 // Run: node --test tests/
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadMain } from "./harness.mjs";
+import { loadMain, stub } from "./harness.mjs";
 
 const page = loadMain();
 const m = page.exports;
@@ -64,4 +64,25 @@ test("lightbox clears the previous image when a tile's data-img is rejected", ()
   assert.equal(lbImg.src, "assets/images/1.jpg");
   tiles[1].on.click();
   assert.equal(lbImg.src, undefined, "still showing the previous exhibit");
+});
+
+test("sound toggle ramps from the current gain, not the last scheduled event", () => {
+  const calls = [];
+  const param = () => ({ value: 0.07, setValueAtTime: (...a) => calls.push(["set", ...a]),
+    cancelScheduledValues: (...a) => calls.push(["cancel", ...a]),
+    linearRampToValueAtTime: (...a) => calls.push(["ramp", ...a]), setTargetAtTime() {}, exponentialRampToValueAtTime() {} });
+  let master = null;
+  class FakeAudioContext {
+    constructor() { this.currentTime = 0; this.state = "running"; this.destination = stub(); }
+    createGain() { const g = { gain: master ? stub() : param(), connect() {} }; master ??= g; return g; }
+    createOscillator() { return stub(); } createBiquadFilter() { return stub(); }
+    createDelay() { return stub(); } createChannelMerger() { return stub(); }
+  }
+  const p = loadMain({ extra: { AudioContext: FakeAudioContext } });
+  const sound = p.ctx.soundscape;
+  sound.toggle();                 // on at t=0: ramp up over 2.5 s
+  sound.ctx.currentTime = 0.5;
+  calls.length = 0;
+  sound.toggle();                 // off mid-ramp
+  assert.deepEqual(calls, [["cancel", 0.5], ["set", 0.07, 0.5], ["ramp", 0, 1.7]]);
 });

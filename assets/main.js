@@ -326,15 +326,19 @@
 
       this.isPlaying = !this.isPlaying;
       const now = this.ctx.currentTime;
+      const g = this.masterGain.gain;
+      // Pin the current level after cancelling, or the ramp starts from the last
+      // remaining event and the gain jumps (an audible click) on a quick re-toggle.
+      const holdNow = () => { g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); };
 
       if (this.isPlaying) {
-        this.masterGain.gain.cancelScheduledValues(now);
-        this.masterGain.gain.linearRampToValueAtTime(0.35, now + 2.5);
+        holdNow();
+        g.linearRampToValueAtTime(0.35, now + 2.5);
         this._startScheduler();
       } else {
         this._stopScheduler();
-        this.masterGain.gain.cancelScheduledValues(now);
-        this.masterGain.gain.linearRampToValueAtTime(0, now + 1.2);
+        holdNow();
+        g.linearRampToValueAtTime(0, now + 1.2);
       }
       return this.isPlaying;
     }
