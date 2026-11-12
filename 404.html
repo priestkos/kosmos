@@ -278,8 +278,9 @@ const deckN = document.getElementById('deckN'), launchN = document.getElementByI
 const ctlButtons = [...document.querySelectorAll('.ctl button')];
 
 function setCounts(d, l, persist){
-  deckCount = Math.max(0, Math.min(MAX_DECK, Math.round(d)));
-  launchCount = Math.max(0, Math.min(MAX_LAUNCH, Math.round(l)));
+  // a non-number (e.g. garbage in localStorage) falls back to the defaults
+  deckCount = Number.isFinite(d) ? Math.max(0, Math.min(MAX_DECK, Math.round(d))) : MAX_DECK;
+  launchCount = Number.isFinite(l) ? Math.max(0, Math.min(MAX_LAUNCH, Math.round(l))) : 1;
   deckN.textContent = deckCount; launchN.textContent = launchCount;
   for (const b of ctlButtons){
     const step = Number(b.dataset.step);
