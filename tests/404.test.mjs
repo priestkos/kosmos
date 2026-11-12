@@ -22,3 +22,9 @@ test("404: garbage saved counts fall back to the defaults", () => {
   assert.ok(Number.isFinite(Number(deckN.textContent)) && deckN.textContent !== "", `deck ${deckN.textContent}`);
   assert.equal(launchN.textContent, 1);
 });
+
+test("404: an unknown saved theme falls back to dark", () => {
+  const p = load404({ storage: { "carrier404-theme": "blue" } });
+  p.raf.shift()(16);
+  assert.equal(p.ctx.document.documentElement.dataset.theme, "dark");
+});

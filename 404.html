@@ -117,6 +117,7 @@ const PAL = {
 };
 let pal = PAL.dark;
 function setTheme(t){
+  if (!PAL[t]) t = 'dark';  // e.g. a stale or garbage localStorage value
   root.dataset.theme = t; pal = PAL[t];
   themeBtn.textContent = t === 'dark' ? 'Dark' : 'Light';
   try{ localStorage.setItem('carrier404-theme', t); }catch(e){}
