@@ -1314,11 +1314,6 @@ html.age-ok .age-gate {
   pointer-events: auto;
 }
 
-/* Canvas for dynamic wavy threads with sparks & embers */
-.traits-threads-canvas {
-  display: none;
-}
-
 /* Background Compass Orbit Rings & Spoke Lines */
 .traits-orbit-svg {
   display: none;

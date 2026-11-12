@@ -820,7 +820,6 @@
     { x: 500, y: 500 },
     { x: 500, y: 500 }
   ];
-  let threadSparks = [];
   const activeThreadIndices = new Set();
 
   // Traits is a normal scrolling list on every screen, so the pinned carousel stays off.
@@ -1202,131 +1201,6 @@
   }
 
   // =========================================================================
-  // 5. ANIMATED WAVY THREADS WITH SPARKS & EMBERS FOR ACT 3 HUB & SPOKE
-  // =========================================================================
-  function initWavyThreads() {
-    const canvas = document.getElementById('traits-threads-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let time = 0;
-
-    function drawThreads() {
-      requestAnimationFrame(drawThreads);
-      time += 0.028;
-
-      ctx.clearRect(0, 0, 1000, 1000);
-
-      // Draw threads to visible satellites and emit energetic sparks
-      const visibleIndices = Array.from(activeThreadIndices);
-      if (visibleIndices.length === 0) return;
-
-      // Connect threads from the sphere's actual right-shifted position
-      const cx = sphereCenterNormalized.x;
-      const cy = sphereCenterNormalized.y;
-
-      visibleIndices.forEach(idx => {
-        const tgt = cardScreenCoords[idx];
-        if (!tgt) return;
-
-        // Draw multiple glowing wavy sine-wave filaments
-        const dx = tgt.x - cx;
-        const dy = tgt.y - cy;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 20) return; // Only skip if right at center
-        const normalX = -dy / dist;
-        const normalY = dx / dist;
-
-        // Core thread + glowing outer halo
-        [
-          { width: 5.5, alpha: 0.95, col: 'rgba(255, 68, 85, ' },
-          { width: 3.2, alpha: 1.0, col: 'rgba(255, 220, 140, ' }
-        ].forEach(layer => {
-          ctx.beginPath();
-          ctx.lineWidth = layer.width;
-
-          const steps = 48;
-          for (let step = 0; step <= steps; step++) {
-            const t = step / steps;
-            const baseX = cx + dx * t;
-            const baseY = cy + dy * t;
-
-            // Amplitude bows out in the middle (envelope)
-            const envelope = Math.sin(t * Math.PI);
-            const wave = Math.sin(t * 12 - time * 3.5 + idx * 1.8) * (20 * envelope)
-                       + Math.cos(t * 7 + time * 2.2) * (10 * envelope);
-
-            const px = baseX + normalX * wave;
-            const py = baseY + normalY * wave;
-
-            if (step === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          }
-
-          const grad = ctx.createLinearGradient(cx, cy, tgt.x, tgt.y);
-          grad.addColorStop(0, layer.col + '0.5)');
-          grad.addColorStop(0.3, layer.col + (0.95 * layer.alpha) + ')');
-          grad.addColorStop(1, layer.col + (1.0 * layer.alpha) + ')');
-
-          ctx.strokeStyle = grad;
-          ctx.shadowBlur = 16;
-          ctx.shadowColor = '#ff2a44';
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-        });
-
-        // Spawn dynamic sparkling embers along the wavy thread
-        for (let k = 0; k < 3; k++) {
-          if (Math.random() < 0.75) {
-            const t = 0.10 + Math.random() * 0.85;
-            const envelope = Math.sin(t * Math.PI);
-            const wave = Math.sin(t * 12 - time * 3.5 + idx * 1.8) * (20 * envelope);
-            const px = cx + dx * t + normalX * wave;
-            const py = cy + dy * t + normalY * wave;
-
-            threadSparks.push({
-              x: px,
-              y: py,
-              vx: (Math.random() - 0.5) * 2.5 + normalX * (Math.random() - 0.5) * 3.5,
-              vy: (Math.random() - 0.5) * 2.2 - 1.4, // upward ember drift
-              size: 1.6 + Math.random() * 3.0,
-              alpha: 1.0,
-              decay: 0.016 + Math.random() * 0.018,
-              hue: Math.random() > 0.4 ? 'gold' : 'crimson'
-            });
-          }
-        }
-      });
-
-      // Update & render sparks
-      for (let i = threadSparks.length - 1; i >= 0; i--) {
-        const s = threadSparks[i];
-        s.x += s.vx;
-        s.y += s.vy;
-        s.alpha -= s.decay;
-
-        if (s.alpha <= 0) {
-          threadSparks.splice(i, 1);
-          continue;
-        }
-
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fillStyle = s.hue === 'gold' 
-          ? `rgba(245, 176, 65, ${s.alpha})` 
-          : `rgba(255, 68, 85, ${s.alpha})`;
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = s.hue === 'gold' ? '#f5b041' : '#ff2a44';
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    }
-
-    drawThreads();
-  }
-
-  // =========================================================================
   // 5. TRAIT SATELLITE INTERACTION & HARMONIC SHIFT
   // =========================================================================
   function initTraitSelector() {
@@ -1336,8 +1210,6 @@
       sat.addEventListener('mouseenter', () => {
         satellites.forEach(s => s.classList.remove('sat-active'));
         sat.classList.add('sat-active');
-
-        activeThreadIndices.add(idx);
       });
     });
   }
@@ -1917,7 +1789,6 @@
     safeInit('animate', animate);
     safeInit('initScrollytelling', initScrollytelling);
     safeInit('init3DTiltAndSplitDepth', init3DTiltAndSplitDepth);
-    safeInit('initWavyThreads', initWavyThreads);
     safeInit('initSphereEmbers', initSphereEmbers);
     safeInit('initGlassBlockEmbers', initGlassBlockEmbers);
     safeInit('initTraitSelector', initTraitSelector);

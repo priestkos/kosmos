@@ -33,3 +33,7 @@ test("safeGalleryAssetUrl accepts only gallery image paths", () => {
   }
   assert.equal(m.safeGalleryAssetUrl("assets/images/3.jpg", thumb), null);
 });
+
+test("only visible canvases run frame loops (no hidden trait-thread canvas)", () => {
+  assert.deepEqual(page.raf.map((f) => f.name).sort(), ["animate", "drawBlockEmbers", "drawSphereEmbers"]);
+});
