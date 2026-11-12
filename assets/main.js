@@ -1315,6 +1315,7 @@
       const idxText = `EXHIBIT ${numStr}`;
 
       if (imgSrc) lbImg.src = imgSrc;
+      else lbImg.removeAttribute('src'); // never show the previous exhibit under a new number
       lbImg.alt = exhibitAltText(numStr);
       lbIdx.textContent = idxText;
 

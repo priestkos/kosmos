@@ -49,3 +49,19 @@ test("reduced motion: no frame loops, tilt or parallax listeners", () => {
   loadMain({ bySelector: { "[data-tilt]": [{ ...el, addEventListener: (ev) => normal.push(ev) }] } });
   assert.deepEqual(normal, ["mousemove", "mouseleave"]);
 });
+
+test("lightbox clears the previous image when a tile's data-img is rejected", () => {
+  const tile = (img) => {
+    const on = {};
+    return { on, getAttribute: (n) => (n === "data-img" ? img : null), setAttribute() {}, querySelector: () => null,
+      appendChild() {}, addEventListener: (ev, fn) => (on[ev] = fn) };
+  };
+  const tiles = [tile("assets/images/1.jpg"), tile("../../evil.jpg")];
+  const lbImg = { removeAttribute(n) { delete this[n]; } };
+  const p = loadMain({ bySelector: { ".gallery-tile": tiles }, byId: { "lightbox-img": lbImg } });
+  assert.deepEqual(p.errors, []);
+  tiles[0].on.click();
+  assert.equal(lbImg.src, "assets/images/1.jpg");
+  tiles[1].on.click();
+  assert.equal(lbImg.src, undefined, "still showing the previous exhibit");
+});
