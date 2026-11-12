@@ -1,7 +1,7 @@
 /**
  * K'OS MOS CONTROLLER & 3D ENGINE
  * - WebGL 3D Parametric Constellation (Three.js) morphing across scroll stages:
- *   [Kitsune Sigil -> Celestial Harp -> Nine Tails Fan -> Starlight Prism -> Cosmic Vortex]
+ *   [Kitsune Sigil -> Celestial Harp -> Nine Tails Fan -> Cosmic Vortex]
  * - Multi-Plane Split Depth & 3D Tilt Parallax Tracking
  * - Web Audio Celestial Soundscape Synthesizer
  * - Dynamic Scrollytelling Section Triggers & Active State Management
@@ -386,7 +386,6 @@
     fox: new Float32Array(PARTICLE_COUNT * 3),
     harp: new Float32Array(PARTICLE_COUNT * 3),
     fan: new Float32Array(PARTICLE_COUNT * 3),
-    prism: new Float32Array(PARTICLE_COUNT * 3),
     sphere: new Float32Array(PARTICLE_COUNT * 3)
   };
 
@@ -534,26 +533,6 @@
     }
   }
 
-  function generatePrism(buf) {
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const idx = i * 3;
-      const phi = Math.random() * Math.PI * 2;
-      const h = (Math.random() - 0.5) * 130;
-      const r = (1 - Math.abs(h) / 75) * 65;
-
-      const edgeSnap = Math.round(phi / (Math.PI / 3)) * (Math.PI / 3);
-      const blendedPhi = Math.random() > 0.4 ? edgeSnap : phi;
-
-      const x = Math.cos(blendedPhi) * Math.max(0, r) + (Math.random() - 0.5) * 6;
-      const y = h;
-      const z = Math.sin(blendedPhi) * Math.max(0, r) + (Math.random() - 0.5) * 6;
-
-      buf[idx] = x * 1.35;
-      buf[idx + 1] = y * 1.35;
-      buf[idx + 2] = z * 1.35;
-    }
-  }
-
   function generateSphere(buf) {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const idx = i * 3;
@@ -592,7 +571,6 @@
     generateFox(shapes.fox);
     generateHarp(shapes.harp);
     generateFan(shapes.fan);
-    generatePrism(shapes.prism);
     generateSphere(shapes.sphere);
 
     currentPositions = new Float32Array(PARTICLE_COUNT * 3);
